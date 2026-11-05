@@ -1,0 +1,2744 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Inspire School System Muzaffargarh</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><rect width='120' height='120' rx='24' fill='%231e6fd9'/><path d='M60 18 L94 32 L60 46 L26 32 Z' fill='white'/><path d='M60 70 C50 64 38 62 28 64 L28 88 C38 86 50 88 60 94 C70 88 82 86 92 88 L92 64 C82 62 70 64 60 70 Z' fill='white'/></svg>" />
+
+<!-- ============ CDNs ============ -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          brand: {
+            50:'#eff7ff',100:'#dbeeff',200:'#bfe1ff',300:'#93cdff',
+            400:'#60b0ff',500:'#3b91fb',600:'#1e6fd9',700:'#1558b0',
+            800:'#164a8d',900:'#0b2f63',950:'#071c3d'
+          }
+        },
+        fontFamily: { sans: ['Poppins','ui-sans-serif','system-ui'] },
+        boxShadow: {
+          glow: '0 0 40px rgba(30,111,217,.35)',
+          soft: '0 10px 40px -12px rgba(16,42,80,.25)'
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  *{ -webkit-tap-highlight-color: transparent; }
+  html,body{ font-family:'Poppins',sans-serif; }
+  body{ overflow-x:hidden; }
+
+  /* ================= LOADER ================= */
+  #loader{
+    position:fixed; inset:0; z-index:10000; display:grid; place-items:center;
+    background: radial-gradient(circle at 50% 40%, #1e6fd9 0%, #0b2f63 55%, #04122a 100%);
+    transition: opacity .8s ease, visibility .8s ease;
+  }
+  #loader.hide{ opacity:0; visibility:hidden; }
+  .loader-wrap{ position:relative; width:340px; height:340px; display:grid; place-items:center; }
+  .ring{ position:absolute; border-radius:50%; border:3px solid transparent; }
+  .ring1{ width:300px;height:300px; border-top-color:#8ec5ff; border-right-color:rgba(142,197,255,.25);
+          animation:spin 2.4s linear infinite; box-shadow:0 0 50px rgba(96,176,255,.55); }
+  .ring2{ width:230px;height:230px; border-bottom-color:#fff; border-left-color:rgba(255,255,255,.2);
+          animation:spin 1.7s linear infinite reverse; box-shadow:0 0 40px rgba(255,255,255,.35); }
+  .ring3{ width:160px;height:160px; border-top-color:#bfe1ff;
+          animation:spin 3.4s linear infinite; box-shadow:0 0 30px rgba(191,225,255,.5); }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .loader-core{ position:relative; z-index:3; text-align:center; color:#fff; animation:pop .9s ease; }
+  .loader-core h1{ font-size:1.35rem; font-weight:800; letter-spacing:.5px; text-shadow:0 0 24px rgba(255,255,255,.7); }
+  .loader-core p{ font-size:.72rem; letter-spacing:5px; text-transform:uppercase; opacity:.85; }
+  @keyframes pop{ from{ transform:scale(.8); opacity:0;} to{ transform:scale(1); opacity:1;} }
+  .loader-bar{ width:180px;height:4px;border-radius:99px;background:rgba(255,255,255,.2);overflow:hidden;margin:14px auto 0;}
+  .loader-bar i{ display:block;height:100%;width:40%;border-radius:99px;background:#fff;animation:slide 1.2s ease-in-out infinite;}
+  @keyframes slide{ 0%{transform:translateX(-120%)} 100%{transform:translateX(320%)} }
+
+  /* ================= GENERAL ================= */
+  .nav-link{ position:relative; padding:.5rem .75rem; border-radius:.6rem; font-weight:500;
+    transition:transform .28s cubic-bezier(.2,.8,.2,1), color .25s, background .25s; display:inline-flex; align-items:center; gap:.35rem;}
+  .nav-link:hover{ transform:translateY(-4px); color:#1e6fd9; background:rgba(30,111,217,.08); }
+  .dark .nav-link:hover{ color:#93cdff; background:rgba(147,205,255,.1); }
+  .nav-link::after{ content:'\f061'; font-family:'Font Awesome 6 Free'; font-weight:900; font-size:.6rem;
+    opacity:0; transform:translateX(-6px); transition:all .28s ease; }
+  .nav-link:hover::after{ opacity:1; transform:translateX(0); }
+
+  .btn{ display:inline-flex; align-items:center; justify-content:center; gap:.5rem; font-weight:600;
+    border-radius:.75rem; padding:.7rem 1.4rem; transition:all .3s cubic-bezier(.2,.8,.2,1); cursor:pointer; }
+  .btn:hover{ transform:translateY(-3px) scale(1.02); }
+  .btn:active{ transform:translateY(0) scale(.98); }
+  .btn-primary{ background:linear-gradient(135deg,#1e6fd9,#3b91fb); color:#fff; box-shadow:0 10px 24px -8px rgba(30,111,217,.75); }
+  .btn-primary:hover{ box-shadow:0 18px 34px -10px rgba(30,111,217,.9); }
+  .btn-ghost{ background:rgba(255,255,255,.14); color:#fff; border:1px solid rgba(255,255,255,.4); backdrop-filter:blur(6px); }
+  .btn-ghost:hover{ background:rgba(255,255,255,.28); }
+
+  .card{ background:#fff; border-radius:1.25rem; box-shadow:0 10px 40px -18px rgba(16,42,80,.35);
+    transition:transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s, border-color .35s; border:1px solid rgba(30,111,217,.08); }
+  .dark .card{ background:#0f172a; border-color:rgba(147,205,255,.12); }
+  .card:hover{ transform:translateY(-8px) scale(1.012); box-shadow:0 26px 60px -22px rgba(16,42,80,.55); }
+
+  .hover-zoom{ overflow:hidden; border-radius:1rem; }
+  .hover-zoom img{ transition:transform .8s cubic-bezier(.2,.8,.2,1); }
+  .hover-zoom:hover img{ transform:scale(1.12) rotate(1deg); }
+
+  .gradient-text{ background:linear-gradient(120deg,#1e6fd9,#60b0ff,#1558b0); -webkit-background-clip:text; background-clip:text; color:transparent; }
+
+  .section-title{ font-size:clamp(1.6rem,3.4vw,2.6rem); font-weight:800; letter-spacing:-.5px; }
+
+  .glass{ background:rgba(255,255,255,.72); backdrop-filter:blur(16px) saturate(160%); }
+  .dark .glass{ background:rgba(9,17,33,.78); }
+
+  .scrollbar-thin::-webkit-scrollbar{ width:8px; height:8px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb{ background:#93cdff; border-radius:99px; }
+  .dark .scrollbar-thin::-webkit-scrollbar-thumb{ background:#1558b0; }
+
+  .input{ width:100%; border-radius:.75rem; border:1.5px solid #d7e5f7; background:#fff;
+    padding:.68rem .9rem; font-size:.9rem; outline:none; transition:all .25s; color:#0f172a; }
+  .input:focus{ border-color:#1e6fd9; box-shadow:0 0 0 4px rgba(30,111,217,.15); }
+  .dark .input{ background:#0b1220; border-color:#1e2f4d; color:#e2e8f0; }
+  .label{ font-size:.75rem; font-weight:600; text-transform:uppercase; letter-spacing:.6px; color:#5b7796; margin-bottom:.3rem; display:block; }
+  .dark .label{ color:#8fa9c6; }
+
+  .tab-btn{ padding:.6rem 1rem; border-radius:.7rem; font-weight:600; font-size:.85rem; transition:all .25s;
+    display:flex; align-items:center; gap:.55rem; width:100%; text-align:left; }
+  .tab-btn:hover{ background:rgba(30,111,217,.1); transform:translateX(4px); }
+  .tab-btn.active{ background:linear-gradient(135deg,#1e6fd9,#3b91fb); color:#fff; box-shadow:0 8px 20px -8px rgba(30,111,217,.8); }
+
+  .dash-card{ border-radius:1.1rem; padding:1.25rem; color:#fff; position:relative; overflow:hidden;
+    transition:transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s; }
+  .dash-card:hover{ transform:translateY(-6px) scale(1.02); }
+  .dash-card::after{ content:''; position:absolute; width:130px;height:130px;border-radius:50%;
+    background:rgba(255,255,255,.16); right:-40px; top:-40px; transition:transform .5s; }
+  .dash-card:hover::after{ transform:scale(1.4); }
+
+  .pulse-dot{ width:9px;height:9px;border-radius:50%;background:#22c55e;position:relative;display:inline-block; }
+  .pulse-dot::after{ content:'';position:absolute;inset:0;border-radius:50%;background:#22c55e;animation:pulse 1.8s infinite; }
+  @keyframes pulse{ 0%{transform:scale(1);opacity:.9} 100%{transform:scale(2.8);opacity:0} }
+
+  .float-wa{ animation:floaty 3s ease-in-out infinite; }
+  @keyframes floaty{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-9px)} }
+
+  .slide-fade{ animation:slideFade .8s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes slideFade{ from{ opacity:0; transform:translateY(26px);} to{ opacity:1; transform:translateY(0);} }
+
+  .modal-backdrop{ position:fixed; inset:0; z-index:9000; background:rgba(6,17,36,.65); backdrop-filter:blur(6px);
+    display:grid; place-items:center; padding:1rem; animation:fadeIn .3s ease; }
+  @keyframes fadeIn{ from{opacity:0} to{opacity:1} }
+  .modal-box{ width:100%; max-width:640px; max-height:92vh; overflow-y:auto; border-radius:1.4rem; background:#fff;
+    box-shadow:0 40px 90px -30px rgba(0,0,0,.6); animation:modalIn .45s cubic-bezier(.2,.8,.2,1); }
+  .dark .modal-box{ background:#0f172a; }
+  @keyframes modalIn{ from{ opacity:0; transform:translateY(40px) scale(.96);} to{opacity:1;transform:translateY(0) scale(1);} }
+
+  .marquee{ display:flex; gap:2.5rem; animation:marquee 26s linear infinite; white-space:nowrap; }
+  @keyframes marquee{ from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+  [data-aos]{ will-change:transform,opacity; }
+</style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-200 antialiased">
+
+<!-- ==================== LOADER ==================== -->
+<div id="loader">
+  <div class="loader-wrap">
+    <div class="ring ring1"></div>
+    <div class="ring ring2"></div>
+    <div class="ring ring3"></div>
+    <div class="loader-core">
+      <div id="loaderLogo" class="flex justify-center mb-2"></div>
+      <h1>Inspire School System</h1>
+      <p>Muzaffargarh</p>
+      <div class="loader-bar"><i></i></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SITE ==================== -->
+<div id="site" class="opacity-0 transition-opacity duration-700">
+
+  <!-- NAVBAR -->
+  <header id="navbar" class="sticky top-0 z-50 glass border-b border-brand-100/60 dark:border-brand-900/50 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="flex items-center justify-between h-20">
+        <a href="#/home" class="flex items-center gap-3 group">
+          <span id="navLogo" class="transition-transform duration-500 group-hover:rotate-[10deg] group-hover:scale-110"></span>
+          <span class="leading-tight">
+            <span class="block font-extrabold text-lg md:text-xl tracking-tight gradient-text">Inspire School System</span>
+            <span class="block text-[10px] md:text-xs font-semibold tracking-[3px] uppercase text-brand-600 dark:text-brand-300">Muzaffargarh</span>
+          </span>
+        </a>
+
+        <nav id="desktopNav" class="hidden xl:flex items-center gap-1 text-sm"></nav>
+
+        <div class="flex items-center gap-2">
+          <button onclick="toggleTheme()" class="w-11 h-11 rounded-xl grid place-items-center bg-brand-50 dark:bg-slate-800 text-brand-700 dark:text-brand-300 hover:scale-110 hover:rotate-12 transition-all duration-300" title="Toggle theme">
+            <i id="themeIcon" class="fa-solid fa-moon"></i>
+          </button>
+          <a href="#/contact" class="btn btn-primary hidden md:inline-flex text-sm">
+            <i class="fa-solid fa-paper-plane"></i> Contact Us
+          </a>
+          <button onclick="toggleMobileNav()" class="xl:hidden w-11 h-11 rounded-xl grid place-items-center bg-brand-600 text-white hover:scale-110 transition">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="mobileNav" class="hidden xl:hidden border-t border-brand-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-4 space-y-1 max-h-[70vh] overflow-y-auto scrollbar-thin"></div>
+  </header>
+
+  <main id="main"></main>
+
+  <!-- FOOTER -->
+  <footer id="footer" class="bg-gradient-to-br from-brand-950 via-brand-900 to-brand-800 text-brand-100 pt-16 pb-8 mt-20 relative overflow-hidden">
+    <div class="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-brand-500/20 blur-3xl"></div>
+    <div class="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-brand-400/20 blur-3xl"></div>
+    <div class="max-w-7xl mx-auto px-4 relative" id="footerInner"></div>
+  </footer>
+</div>
+
+<!-- FLOATING WHATSAPP -->
+<a id="waFloat" href="https://wa.me/923054315566?text=Assalam%20o%20Alaikum%2C%20I%20want%20information%20about%20Inspire%20School%20System." target="_blank"
+   class="float-wa fixed bottom-6 right-6 z-[60] w-16 h-16 rounded-full bg-[#25D366] text-white grid place-items-center text-3xl shadow-[0_14px_34px_-8px_rgba(37,211,102,.9)] hover:scale-110 transition-transform">
+  <i class="fa-brands fa-whatsapp"></i>
+</a>
+
+<!-- PORTAL ROOT -->
+<div id="portalRoot" class="hidden min-h-screen"></div>
+
+<!-- MODAL ROOT -->
+<div id="modalRoot"></div>
+
+<!-- ==================== APPLICATION SCRIPT ==================== -->
+<script>
+/* =========================================================
+   SUPABASE CLIENT
+   ========================================================= */
+const SUPABASE_URL = 'https://kmodlsnudygkqoieqtwx.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_KnxU90CKMVVRbPgwDV8xWQ_Mga3V2ky';
+const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+/* =========================================================
+   STATIC DATA
+   ========================================================= */
+const CLASS_LIST = ['ECE','Nursery','KG','Class 1','Class 2','Class 3','Class 4','Class 5',
+                    'Class 6','Class 7','Class 8','Class 9','Class 10','Academy 1st Year','Academy 2nd Year'];
+
+const IMG = {
+  hero:'https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1600&q=80',
+  s1:'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1600&q=80',
+  s2:'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1600&q=80',
+  s3:'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1600&q=80',
+  principal:'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=500&q=80',
+  g1:'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=900&q=80',
+  g2:'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=900&q=80',
+  g3:'https://images.unsplash.com/photo-1571260899304-425eee4c7efc?auto=format&fit=crop&w=900&q=80',
+  g4:'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=900&q=80',
+  g5:'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?auto=format&fit=crop&w=900&q=80',
+  g6:'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=900&q=80',
+  g7:'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&w=900&q=80',
+  g8:'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=900&q=80',
+  t1:'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=500&q=80',
+  t2:'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=500&q=80',
+  t3:'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=500&q=80',
+  t4:'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=500&q=80',
+  a1:'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=500&q=80',
+  a2:'https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?auto=format&fit=crop&w=500&q=80',
+  a3:'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=500&q=80',
+  avatar:'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80'
+};
+
+const uid = (p='id') => p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const today = () => new Date().toISOString().slice(0,10);
+
+/* =========================================================
+   DEFAULT DATABASE (deep JSON structure stored in one column)
+   ========================================================= */
+const DEFAULT_DB = {
+  _meta: { version: 1, school: 'Inspire School System Muzaffargarh' },
+
+  settings: {
+    schoolName: 'Inspire School System',
+    location: 'Muzaffargarh',
+    tagline: 'Learn • Lead • Inspire',
+    adminPassword: 'Pakistan1947',
+    hero: {
+      title: 'Inspire School System Muzaffargarh',
+      subtitle: 'Nurturing young minds with knowledge, character and confidence — building the leaders of tomorrow.',
+      image: IMG.hero
+    },
+    about: `Inspire School System Muzaffargarh was founded with a single, powerful belief: that every child carries
+within them a spark of genius. Our campus provides a safe, nurturing and intellectually stimulating environment where
+students from ECE to Matriculation, and Academy students of 1st & 2nd Year, are guided by passionate educators.
+
+We combine a rigorous academic curriculum with character education, co-curricular activities and modern teaching
+methodologies. Our small class sizes ensure that every student receives personal attention, while our experienced
+faculty members act as mentors who inspire curiosity and a lifelong love for learning.`,
+    vision: `Our vision is to become the most trusted educational institution of South Punjab — a school where academic
+excellence meets moral integrity. We envision graduates who are confident communicators, critical thinkers and
+compassionate human beings, ready to serve their community and their country with distinction.
+
+We strive to create an ecosystem of learning where technology, creativity and tradition walk hand in hand; where
+teachers are facilitators, parents are partners, and students are the true protagonists of their own educational journey.`,
+    mission: `To deliver affordable, high-quality education that develops the intellectual, moral and social faculties of
+every student, and to prepare them for success in a rapidly changing world.`,
+    whyUs: [
+      { icon:'fa-user-graduate', title:'Qualified Faculty', desc:'Highly educated, trained and compassionate teachers with years of experience.' },
+      { icon:'fa-people-group', title:'Small Class Sizes', desc:'Personalised attention for every student with a low student-teacher ratio.' },
+      { icon:'fa-flask', title:'Modern Labs & Library', desc:'Well-equipped science laboratories and a rich, ever-growing library.' },
+      { icon:'fa-shield-heart', title:'Safe Environment', desc:'CCTV monitored, secure campus with a strict child-protection policy.' },
+      { icon:'fa-futbol', title:'Co-Curricular Activities', desc:'Sports, debates, art, quizzes and annual functions all year round.' },
+      { icon:'fa-mobile-screen', title:'Digital Learning', desc:'Smart boards, online notes and a digital parent portal for results.' }
+    ],
+    principal: {
+      name: 'Mr. Muhammad Aslam',
+      pic: IMG.principal,
+      message: 'Dear Parents and Students, at Inspire School System we do not merely teach syllabus — we shape character. Every child who walks through our gates is our responsibility and our pride. Together, let us build a generation that excels.',
+      phone: '03034401641'
+    },
+    contact: {
+      phones: ['0303-4401641','0305-4315566'],
+      whatsapp: '03054315566',
+      email: 'inspireschoolsystem77@gmail.com',
+      address: 'Main Campus, Jhang Road, Muzaffargarh, Punjab, Pakistan',
+      mapUrl: 'https://maps.app.goo.gl/aoeyNcDj6BEKgv3x7?g_st=ac',
+      mapEmbed: 'https://www.google.com/maps?q=Muzaffargarh,Punjab,Pakistan&output=embed'
+    },
+    slides: [
+      { img: IMG.s1, title:'Excellence in Education', text:'A curriculum designed to challenge and inspire every learner.' },
+      { img: IMG.s2, title:'Character & Confidence', text:'We build young people of integrity, courage and compassion.' },
+      { img: IMG.s3, title:'A Campus That Feels Like Home', text:'Safe, welcoming and full of opportunities to grow.' }
+    ],
+    gallery: [
+      { img: IMG.g1, title:'Annual Prize Distribution', desc:'Celebrating the achievements of our brilliant students.' },
+      { img: IMG.g2, title:'Science Exhibition 2024', desc:'Young scientists showcasing innovative projects.' },
+      { img: IMG.g3, title:'Sports Day', desc:'A day of energy, teamwork and sportsmanship.' },
+      { img: IMG.g4, title:'Library Reading Week', desc:'Encouraging the habit of reading among students.' },
+      { img: IMG.g5, title:'Parent-Teacher Meeting', desc:'Building strong partnerships with parents.' },
+      { img: IMG.g6, title:'Graduation Ceremony', desc:'Farewell to our graduating class of 2024.' },
+      { img: IMG.g7, title:'Cultural Day', desc:'Celebrating the rich culture and heritage of Pakistan.' },
+      { img: IMG.g8, title:'Classroom Learning', desc:'Interactive, activity-based modern classrooms.' }
+    ],
+    administration: [
+      { name:'Mr. Muhammad Aslam', role:'Principal', pic: IMG.a1 },
+      { name:'Mrs. Ayesha Fatima', role:'Vice Principal', pic: IMG.a2 },
+      { name:'Mr. Kamran Ali', role:'Administrator', pic: IMG.a3 }
+    ],
+    footerNote: 'Inspire School System Muzaffargarh — committed to academic excellence and character building since 2012.'
+  },
+
+  teachers: [
+    { id:'tch_1', name:'Mrs. Ayesha Fatima', pic: IMG.t2, education:'M.Phil Education', subject:'English',
+      contact:'03034401641', email:'ayesha@inspire.edu.pk', timing:'08:00 AM - 02:00 PM', resume:'',
+      salary:45000, bank:'HBL - 01234567890123', password:'teacher123', classes:['Class 9','Class 10'], classTeacherOf:'Class 9' },
+    { id:'tch_2', name:'Mr. Kamran Ali', pic: IMG.t3, education:'M.Sc Mathematics', subject:'Mathematics',
+      contact:'03054315566', email:'kamran@inspire.edu.pk', timing:'08:00 AM - 02:00 PM', resume:'',
+      salary:48000, bank:'UBL - 09876543210987', password:'teacher123', classes:['Class 8','Class 9'], classTeacherOf:'Class 8' },
+    { id:'tch_3', name:'Ms. Hina Riaz', pic: IMG.t1, education:'B.S Physics', subject:'Physics',
+      contact:'03034401641', email:'hina@inspire.edu.pk', timing:'08:00 AM - 02:00 PM', resume:'',
+      salary:42000, bank:'Meezan - 11223344556677', password:'teacher123', classes:['Class 10','Academy 1st Year'], classTeacherOf:'Class 10' },
+    { id:'tch_4', name:'Mr. Bilal Ahmed', pic: IMG.t4, education:'M.A Islamiat', subject:'Islamiat',
+      contact:'03054315566', email:'bilal@inspire.edu.pk', timing:'08:00 AM - 02:00 PM', resume:'',
+      salary:38000, bank:'HBL - 55667788990011', password:'teacher123', classes:['Class 6','Class 7'], classTeacherOf:'Class 6' }
+  ],
+
+  students: [
+    { id:'std_1', name:'Ali Hassan', father:'Muhammad Hassan', className:'Class 9', phone:'03001112233', photo:'', fees:3500, bform:'', address:'Muzaffargarh' },
+    { id:'std_2', name:'Fatima Noor', father:'Abdul Noor', className:'Class 9', phone:'03004445566', photo:'', fees:3500, bform:'', address:'Muzaffargarh' },
+    { id:'std_3', name:'Usman Tariq', father:'Tariq Mahmood', className:'Class 10', phone:'03007778899', photo:'', fees:4000, bform:'', address:'Muzaffargarh' },
+    { id:'std_4', name:'Ayesha Bibi', father:'Ghulam Rasool', className:'Class 10', phone:'03009998877', fees:4000, photo:'', bform:'', address:'Muzaffargarh' },
+    { id:'std_5', name:'Hamza Sheikh', father:'Nadeem Sheikh', className:'Class 8', phone:'03012223344', fees:3000, photo:'', bform:'', address:'Muzaffargarh' },
+    { id:'std_6', name:'Zainab Khan', father:'Sher Khan', className:'Class 8', phone:'03015556677', fees:3000, photo:'', bform:'', address:'Muzaffargarh' },
+    { id:'std_7', name:'Ibrahim Malik', father:'Asif Malik', className:'Class 5', phone:'03018889900', fees:2500, photo:'', bform:'', address:'Muzaffargarh' },
+    { id:'std_8', name:'Maryam Riaz', father:'Riaz Hussain', className:'Nursery', phone:'03013334455', fees:2000, photo:'', bform:'', address:'Muzaffargarh' }
+  ],
+
+  classes: CLASS_LIST.reduce((acc, c) => {
+    acc[c] = {
+      name: c,
+      details: `The ${c} programme at Inspire School System focuses on building strong foundations through activity-based learning, regular assessments and personal mentoring.`,
+      subjects: c.startsWith('Academy') ? ['Physics','Chemistry','Biology','Mathematics','English'] :
+                ['English','Urdu','Mathematics','Islamiat','Science','Computer'],
+      planning: 'Weekly tests every Friday, monthly parent-teacher meetings, and a structured revision plan before each examination term.',
+      fee: c.includes('9') || c.includes('10') || c.startsWith('Academy') ? 4000 : 3000
+    };
+    return acc;
+  }, {}),
+
+  fees: [
+    { id: uid('fee'), student:'Ali Hassan', father:'Muhammad Hassan', contact:'03001112233', className:'Class 9', amount:3500, month:'2024-11', date: today() },
+    { id: uid('fee'), student:'Fatima Noor', father:'Abdul Noor', contact:'03004445566', className:'Class 9', amount:3500, month:'2024-11', date: today() },
+    { id: uid('fee'), student:'Usman Tariq', father:'Tariq Mahmood', contact:'03007778899', className:'Class 10', amount:4000, month:'2024-11', date: today() }
+  ],
+
+  expenses: [
+    { id: uid('exp'), title:'Electricity Bill', category:'Bills', amount:22000, date: today() },
+    { id: uid('exp'), title:'Building Rent', category:'Rent', amount:60000, date: today() },
+    { id: uid('exp'), title:'Stationery & Printing', category:'Other', amount:9500, date: today() }
+  ],
+
+  salaries: [
+    { id: uid('sal'), personType:'Teacher', name:'Mrs. Ayesha Fatima', amount:45000, month:'2024-11', date: today(), status:'Paid' },
+    { id: uid('sal'), personType:'Teacher', name:'Mr. Kamran Ali', amount:48000, month:'2024-11', date: today(), status:'Paid' },
+    { id: uid('sal'), personType:'Staff', name:'Chowkidar Rafiq', amount:18000, month:'2024-11', date: today(), status:'Pending' }
+  ],
+
+  attendance: { students: {}, teachers: {} },
+  notes: [
+    { id: uid('note'), className:'Class 9', subject:'English', title:'Chapter 3 — Letter Writing', type:'Note',
+      content:'https://example.com/notes/english-ch3.pdf', teacherId:'tch_1', date: today() },
+    { id: uid('note'), className:'Class 10', subject:'Physics', title:'Unit 5 — Current Electricity Test', type:'Test',
+      content:'https://example.com/tests/physics-u5.pdf', teacherId:'tch_3', date: today() }
+  ],
+  marks: [
+    { id: uid('mk'), studentId:'std_1', studentName:'Ali Hassan', className:'Class 9', subject:'English', obtained:78, total:100, exam:'Mid Term', date: today() },
+    { id: uid('mk'), studentId:'std_2', studentName:'Fatima Noor', className:'Class 9', subject:'English', obtained:88, total:100, exam:'Mid Term', date: today() }
+  ],
+  announcements: [
+    { id: uid('ann'), text:'Parent-Teacher Meeting will be held this Saturday at 10:00 AM. Attendance is mandatory.', target:'All', date: today(), by:'Admin' }
+  ],
+  tasks: [
+    { id: uid('tsk'), teacherId:'tch_1', text:'Submit Class 9 monthly result sheet', date: today(), status:'Pending' },
+    { id: uid('tsk'), teacherId:'tch_2', text:'Prepare Mathematics revision notes for Class 8', date: today(), status:'Done' }
+  ],
+  activities: [
+    { id: uid('act'), className:'Class 9', title:'Group Presentation on Environment', desc:'Students presented creative posters and speeches on environmental protection.', img: IMG.g2, teacherId:'tch_1', date: today() }
+  ]
+};
+
+/* =========================================================
+   DEEP MERGE + PERSISTENCE
+   ========================================================= */
+function mergeDeep(base, extra){
+  if (Array.isArray(extra)) return extra;
+  if (extra && typeof extra === 'object'){
+    const out = (base && typeof base === 'object' && !Array.isArray(base)) ? { ...base } : {};
+    for (const k in extra) out[k] = (k in out) ? mergeDeep(out[k], extra[k]) : extra[k];
+    return out;
+  }
+  return extra === undefined ? base : extra;
+}
+
+let DB = JSON.parse(JSON.stringify(DEFAULT_DB));
+let syncState = 'local';
+
+function setSyncBadge(state){
+  syncState = state;
+  const b = document.getElementById('syncBadge');
+  if (!b) return;
+  b.innerHTML = state === 'synced'
+    ? '<span class="pulse-dot"></span> Cloud Synced'
+    : '<i class="fa-solid fa-hard-drive text-amber-400"></i> Local Mode';
+}
+
+async function loadDB(){
+  // 1) Try Supabase
+  if (sb){
+    try{
+      const { data, error } = await sb.from('record').select('*').limit(1);
+      if (!error && data && data.length && data[0].record){
+        const parsed = JSON.parse(data[0].record);
+        DB = mergeDeep(JSON.parse(JSON.stringify(DEFAULT_DB)), parsed);
+        syncState = 'synced';
+        localStorage.setItem('inspire_db_backup', JSON.stringify(DB));
+        return;
+      }
+    }catch(e){ console.warn('[Supabase load]', e.message); }
+  }
+  // 2) LocalStorage fallback
+  const local = localStorage.getItem('inspire_db_backup');
+  if (local){
+    try{ DB = mergeDeep(JSON.parse(JSON.stringify(DEFAULT_DB)), JSON.parse(local)); return; }catch(e){}
+  }
+  DB = JSON.parse(JSON.stringify(DEFAULT_DB));
+}
+
+let saveTimer = null;
+function saveDB(){
+  localStorage.setItem('inspire_db_backup', JSON.stringify(DB));
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(pushRemote, 900);
+}
+
+async function pushRemote(){
+  if (!sb) return setSyncBadge('local');
+  try{
+    const json = JSON.stringify(DB);
+    const { data, error } = await sb.from('record').update({ record: json }).not('record','is',null).select();
+    if (error) throw error;
+    if (!data || data.length === 0){
+      const ins = await sb.from('record').insert({ record: json }).select();
+      if (ins.error) throw ins.error;
+    }
+    setSyncBadge('synced');
+  }catch(e){
+    console.warn('[Supabase save]', e.message);
+    setSyncBadge('local');
+  }
+}
+
+/* =========================================================
+   SESSION
+   ========================================================= */
+const getSession = () => { try{ return JSON.parse(sessionStorage.getItem('inspire_session') || 'null'); }catch(e){ return null; } };
+const setSession = s => sessionStorage.setItem('inspire_session', JSON.stringify(s));
+const clearSession = () => sessionStorage.removeItem('inspire_session');
+
+/* =========================================================
+   THEME
+   ========================================================= */
+function applyTheme(){
+  const dark = localStorage.getItem('inspire_theme') === 'dark';
+  document.documentElement.classList.toggle('dark', dark);
+  const i = document.getElementById('themeIcon');
+  if (i) i.className = dark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+}
+function toggleTheme(){
+  const dark = document.documentElement.classList.contains('dark');
+  localStorage.setItem('inspire_theme', dark ? 'light' : 'dark');
+  applyTheme();
+}
+
+/* =========================================================
+   LOGO SVG
+   ========================================================= */
+function logoSVG(cls='w-12 h-12'){
+  return `<svg class="${cls}" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#3b91fb"/><stop offset="100%" stop-color="#1558b0"/>
+      </linearGradient>
+      <linearGradient id="lg2" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#dbeeff"/>
+      </linearGradient>
+    </defs>
+    <!-- laurel left -->
+    <g stroke="#1e6fd9" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".95">
+      <path d="M20 96 C 4 74, 6 44, 26 22"/>
+      <path d="M20 96 C 30 92, 34 85, 33 78"/>
+      <path d="M13 78 C 22 78, 27 73, 27 67"/>
+      <path d="M9 58 C 18 60, 24 56, 25 50"/>
+      <path d="M13 38 C 21 42, 27 39, 29 33"/>
+      <path d="M22 22 C 28 28, 34 27, 37 22"/>
+    </g>
+    <!-- laurel right -->
+    <g stroke="#1e6fd9" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".95">
+      <path d="M100 96 C 116 74, 114 44, 94 22"/>
+      <path d="M100 96 C 90 92, 86 85, 87 78"/>
+      <path d="M107 78 C 98 78, 93 73, 93 67"/>
+      <path d="M111 58 C 102 60, 96 56, 95 50"/>
+      <path d="M107 38 C 99 42, 93 39, 91 33"/>
+      <path d="M98 22 C 92 28, 86 27, 83 22"/>
+    </g>
+    <!-- graduation cap -->
+    <path d="M60 16 L 96 31 L 60 46 L 24 31 Z" fill="url(#lg1)"/>
+    <path d="M60 22 L 84 32 L 60 41 L 36 32 Z" fill="#fff" opacity=".28"/>
+    <path d="M86 37 L 86 53" stroke="#1558b0" stroke-width="2.6" stroke-linecap="round"/>
+    <circle cx="86" cy="56" r="3.4" fill="#1e6fd9"/>
+    <!-- pen nib -->
+    <path d="M60 47 L 67 61 L 60 69 L 53 61 Z" fill="#0b2f63"/>
+    <circle cx="60" cy="59" r="2.4" fill="#fff"/>
+    <!-- open book -->
+    <path d="M60 72 C 50 66, 38 64, 28 66 L 28 90 C 38 88, 50 90, 60 96 C 70 90, 82 88, 92 90 L 92 66 C 82 64, 70 66, 60 72 Z"
+          fill="url(#lg2)" stroke="#1e6fd9" stroke-width="2.8" stroke-linejoin="round"/>
+    <path d="M60 72 L 60 96" stroke="#1e6fd9" stroke-width="2"/>
+    <!-- ribbon -->
+    <path d="M28 100 L 92 100 L 86 112 L 60 105 L 34 112 Z" fill="url(#lg1)"/>
+  </svg>`;
+}
+
+/* =========================================================
+   TOAST / HELPERS
+   ========================================================= */
+const toast = (icon, title) => Swal.fire({ toast:true, position:'top-end', icon, title,
+  showConfirmButton:false, timer:2600, timerProgressBar:true,
+  background: document.documentElement.classList.contains('dark') ? '#0f172a' : '#fff',
+  color: document.documentElement.classList.contains('dark') ? '#e2e8f0' : '#0f172a' });
+
+const alertOk = (title, text='') => Swal.fire({ icon:'success', title, text,
+  background: document.documentElement.classList.contains('dark') ? '#0f172a' : '#fff',
+  color: document.documentElement.classList.contains('dark') ? '#e2e8f0' : '#0f172a',
+  confirmButtonColor:'#1e6fd9' });
+
+const alertErr = (title, text='') => Swal.fire({ icon:'error', title, text,
+  background: document.documentElement.classList.contains('dark') ? '#0f172a' : '#fff',
+  color: document.documentElement.classList.contains('dark') ? '#e2e8f0' : '#0f172a',
+  confirmButtonColor:'#1e6fd9' });
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const money = n => 'Rs. ' + Number(n || 0).toLocaleString('en-PK');
+
+function waLink(number, text){
+  const clean = String(number).replace(/\D/g,'').replace(/^0/, '92');
+  return `https://wa.me/${clean}?text=${encodeURIComponent(text)}`;
+}
+
+/* =========================================================
+   MODAL ENGINE
+   ========================================================= */
+function openModal(html, wide=false){
+  document.getElementById('modalRoot').innerHTML = `
+    <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+      <div class="modal-box ${wide ? 'max-w-4xl' : ''} p-6 md:p-8 text-slate-800 dark:text-slate-200">
+        ${html}
+      </div>
+    </div>`;
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(){
+  document.getElementById('modalRoot').innerHTML = '';
+  document.body.style.overflow = '';
+}
+
+/* =========================================================
+   NAVBAR RENDER
+   ========================================================= */
+function renderNav(){
+  document.getElementById('navLogo').innerHTML = logoSVG('w-12 h-12 drop-shadow');
+  document.getElementById('loaderLogo').innerHTML = logoSVG('w-24 h-24 drop-shadow-2xl');
+
+  const classItems = CLASS_LIST.map(c =>
+    `<a href="#/class/${encodeURIComponent(c)}" class="block px-4 py-2 text-sm rounded-lg hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition-all hover:translate-x-1">${c}</a>`
+  ).join('');
+
+  const portalItems = [
+    { href:'#/portal/admin', icon:'fa-user-shield', label:'Admin Portal' },
+    { href:'#/portal/teacher', icon:'fa-chalkboard-user', label:'Teacher Portal' },
+    { href:'#/portal/student', icon:'fa-user-graduate', label:'Students & Parents' }
+  ].map(p => `<a href="${p.href}" class="block px-4 py-2 text-sm rounded-lg hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition-all hover:translate-x-1">
+      <i class="fa-solid ${p.icon} w-4 mr-2 text-brand-500"></i>${p.label}</a>`).join('');
+
+  const navHTML = `
+    <a href="#/home" class="nav-link">Home</a>
+    <a href="#/about" class="nav-link">About Us</a>
+    <a href="#/contact" class="nav-link">Contact Us</a>
+    <a href="#/vision" class="nav-link">Our Vision</a>
+    <div class="relative group">
+      <a href="#/classes" class="nav-link cursor-pointer">Our Classes <i class="fa-solid fa-chevron-down text-[9px]"></i></a>
+      <div class="absolute left-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 translate-y-2 group-hover:translate-y-0 z-50">
+        <div class="w-64 max-h-[420px] overflow-y-auto scrollbar-thin bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-brand-100 dark:border-slate-800 p-2">
+          ${classItems}
+        </div>
+      </div>
+    </div>
+    <a href="#/whyus" class="nav-link">Why Us</a>
+    <a href="#/notes" class="nav-link">Notes</a>
+    <div class="relative group">
+      <a href="#/portal/admin" class="nav-link cursor-pointer">Portals <i class="fa-solid fa-chevron-down text-[9px]"></i></a>
+      <div class="absolute left-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 translate-y-2 group-hover:translate-y-0 z-50">
+        <div class="w-60 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-brand-100 dark:border-slate-800 p-2">${portalItems}</div>
+      </div>
+    </div>
+    <button onclick="downloadAdmissionForm()" class="ml-2 btn btn-primary text-xs !py-2 !px-3">
+      <i class="fa-solid fa-download"></i> Admission Form
+    </button>`;
+
+  document.getElementById('desktopNav').innerHTML = navHTML;
+
+  document.getElementById('mobileNav').innerHTML = `
+    <a href="#/home" class="tab-btn"><i class="fa-solid fa-house w-4"></i> Home</a>
+    <a href="#/about" class="tab-btn"><i class="fa-solid fa-circle-info w-4"></i> About Us</a>
+    <a href="#/contact" class="tab-btn"><i class="fa-solid fa-envelope w-4"></i> Contact Us</a>
+    <a href="#/vision" class="tab-btn"><i class="fa-solid fa-eye w-4"></i> Our Vision</a>
+    <a href="#/classes" class="tab-btn"><i class="fa-solid fa-layer-group w-4"></i> Our Classes</a>
+    <a href="#/whyus" class="tab-btn"><i class="fa-solid fa-star w-4"></i> Why Us</a>
+    <a href="#/notes" class="tab-btn"><i class="fa-solid fa-book w-4"></i> Notes</a>
+    <div class="pt-2 mt-2 border-t border-brand-100 dark:border-slate-800">
+      <p class="text-[10px] uppercase tracking-widest font-bold text-brand-500 px-3 mb-1">Portals</p>
+      <a href="#/portal/admin" class="tab-btn"><i class="fa-solid fa-user-shield w-4"></i> Admin</a>
+      <a href="#/portal/teacher" class="tab-btn"><i class="fa-solid fa-chalkboard-user w-4"></i> Teacher</a>
+      <a href="#/portal/student" class="tab-btn"><i class="fa-solid fa-user-graduate w-4"></i> Students & Parents</a>
+    </div>
+    <button onclick="downloadAdmissionForm()" class="btn btn-primary w-full mt-3 text-sm"><i class="fa-solid fa-download"></i> Download Admission Form</button>`;
+}
+function toggleMobileNav(){ document.getElementById('mobileNav').classList.toggle('hidden'); }
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+function renderFooter(){
+  const s = DB.settings, c = s.contact;
+  document.getElementById('footerInner').innerHTML = `
+    <div class="grid md:grid-cols-4 gap-10">
+      <div class="md:col-span-2">
+        <div class="flex items-center gap-3 mb-4">
+          ${logoSVG('w-14 h-14')}
+          <div>
+            <h3 class="text-xl font-extrabold text-white">${esc(s.schoolName)}</h3>
+            <p class="text-xs tracking-[3px] uppercase text-brand-300">${esc(s.location)}</p>
+          </div>
+        </div>
+        <p class="text-sm text-brand-200/80 leading-relaxed max-w-md">${esc(s.footerNote)}</p>
+        <div class="flex gap-3 mt-5">
+          ${['facebook-f','instagram','youtube','whatsapp'].map(i=>`<a href="${i==='whatsapp'?waLink(c.whatsapp,'Hello Inspire School System'):'#'}" target="_blank" class="w-10 h-10 rounded-xl bg-white/10 grid place-items-center hover:bg-brand-500 hover:scale-110 hover:-translate-y-1 transition-all duration-300"><i class="fa-brands fa-${i}"></i></a>`).join('')}
+        </div>
+      </div>
+      <div>
+        <h4 class="font-bold text-white mb-4">Quick Links</h4>
+        <ul class="space-y-2 text-sm text-brand-200/80">
+          ${[['#/home','Home'],['#/about','About Us'],['#/vision','Our Vision'],['#/classes','Our Classes'],['#/notes','Notes & Tests'],['#/contact','Contact Us']]
+            .map(([h,l])=>`<li><a href="${h}" class="hover:text-white hover:translate-x-1 inline-block transition-all">${l}</a></li>`).join('')}
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-bold text-white mb-4">Get In Touch</h4>
+        <ul class="space-y-3 text-sm text-brand-200/80">
+          <li class="flex gap-3"><i class="fa-solid fa-user-tie mt-1 text-brand-300"></i><span>Principal: ${esc(s.principal.name)}</span></li>
+          ${c.phones.map(p=>`<li class="flex gap-3"><i class="fa-solid fa-phone mt-1 text-brand-300"></i><a href="tel:${p.replace(/\D/g,'')}" class="hover:text-white transition">${esc(p)}</a></li>`).join('')}
+          <li class="flex gap-3"><i class="fa-solid fa-envelope mt-1 text-brand-300"></i><a href="mailto:${esc(c.email)}" class="hover:text-white transition break-all">${esc(c.email)}</a></li>
+          <li class="flex gap-3"><i class="fa-solid fa-location-dot mt-1 text-brand-300"></i><span>${esc(c.address)}</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-white/10 mt-10 pt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-brand-300/70">
+      <p>© ${new Date().getFullYear()} ${esc(s.schoolName)} ${esc(s.location)}. All Rights Reserved.</p>
+      <p class="flex items-center gap-2"><i class="fa-solid fa-code"></i> Designed &amp; Developed with ❤️</p>
+    </div>`;
+}
+
+/* =========================================================
+   PUBLIC PAGE RENDERERS
+   ========================================================= */
+function renderHome(){
+  const s = DB.settings;
+  const slides = s.slides.map((sl,i)=>`
+    <div class="slide-item absolute inset-0 transition-opacity duration-1000 ${i===0?'opacity-100':'opacity-0'}" data-slide="${i}">
+      <img src="${esc(sl.img)}" class="w-full h-full object-cover" alt="${esc(sl.title)}"/>
+      <div class="absolute inset-0 bg-gradient-to-t from-brand-950/90 via-brand-950/40 to-transparent"></div>
+      <div class="absolute bottom-16 left-6 md:left-14 max-w-xl text-white">
+        <h3 class="text-2xl md:text-4xl font-extrabold drop-shadow-lg">${esc(sl.title)}</h3>
+        <p class="text-sm md:text-base text-white/85 mt-2">${esc(sl.text)}</p>
+      </div>
+    </div>`).join('');
+
+  return `
+  <!-- HERO -->
+  <section class="relative min-h-[86vh] flex items-center overflow-hidden">
+    <img src="${esc(s.hero.image)}" class="absolute inset-0 w-full h-full object-cover scale-105 animate-[spin_0s]" style="animation:none" alt="hero"/>
+    <div class="absolute inset-0 bg-gradient-to-br from-brand-950/92 via-brand-900/75 to-brand-700/60"></div>
+    <div class="absolute inset-0 opacity-20" style="background-image:radial-gradient(circle at 20% 30%,#60b0ff 0,transparent 45%),radial-gradient(circle at 80% 70%,#93cdff 0,transparent 45%)"></div>
+    <div class="relative max-w-7xl mx-auto px-4 py-24 text-white">
+      <div class="max-w-3xl">
+        <span data-aos="fade-down" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 border border-white/25 backdrop-blur text-xs font-semibold tracking-widest uppercase mb-6">
+          <span class="pulse-dot"></span> Admissions Open 2025–26
+        </span>
+        <h1 data-aos="fade-up" class="text-4xl md:text-6xl font-extrabold leading-[1.1] tracking-tight drop-shadow-2xl">
+          ${esc(s.hero.title)}
+        </h1>
+        <p data-aos="fade-up" data-aos-delay="120" class="mt-5 text-base md:text-lg text-white/85 max-w-2xl leading-relaxed">
+          ${esc(s.hero.subtitle)}
+        </p>
+        <div data-aos="fade-up" data-aos-delay="220" class="mt-9 flex flex-wrap gap-4">
+          <a href="#/contact" class="btn btn-primary text-base"><i class="fa-solid fa-paper-plane"></i> Contact Us</a>
+          <button onclick="openEnrollModal()" class="btn btn-ghost text-base"><i class="fa-solid fa-user-plus"></i> Enroll Now</button>
+        </div>
+        <div data-aos="fade-up" data-aos-delay="320" class="mt-12 grid grid-cols-3 gap-4 max-w-lg">
+          ${[['Students', DB.students.length],['Teachers', DB.teachers.length],['Classes', CLASS_LIST.length]].map(([l,v])=>`
+            <div class="rounded-2xl bg-white/10 border border-white/20 backdrop-blur p-4 text-center hover:bg-white/20 hover:-translate-y-1 transition-all duration-300">
+              <p class="text-2xl md:text-3xl font-extrabold">${v}+</p>
+              <p class="text-[11px] uppercase tracking-widest text-white/70 mt-1">${l}</p>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/70 animate-bounce"><i class="fa-solid fa-chevron-down text-xl"></i></div>
+  </section>
+
+  <!-- MARQUEE STRIP -->
+  <div class="bg-brand-600 text-white py-3 overflow-hidden">
+    <div class="marquee text-sm font-semibold tracking-wider uppercase">
+      ${Array(2).fill(`<span class="flex items-center gap-2"><i class="fa-solid fa-graduation-cap"></i> Admissions Open</span>
+      <span class="flex items-center gap-2"><i class="fa-solid fa-star"></i> Quality Education</span>
+      <span class="flex items-center gap-2"><i class="fa-solid fa-chalkboard-user"></i> Expert Faculty</span>
+      <span class="flex items-center gap-2"><i class="fa-solid fa-flask"></i> Modern Labs</span>
+      <span class="flex items-center gap-2"><i class="fa-solid fa-book"></i> Digital Notes</span>`).join('')}
+    </div>
+  </div>
+
+  <!-- SLIDESHOW -->
+  <section class="max-w-7xl mx-auto px-4 py-20">
+    <div class="text-center mb-12" data-aos="fade-up">
+      <p class="text-xs font-bold tracking-[4px] uppercase text-brand-500 mb-2">Life at Inspire</p>
+      <h2 class="section-title">Campus <span class="gradient-text">Highlights</span></h2>
+    </div>
+    <div class="relative rounded-3xl overflow-hidden shadow-2xl h-[340px] md:h-[520px]" data-aos="zoom-in">
+      ${slides}
+      <div class="absolute bottom-5 right-5 flex gap-2 z-20">
+        ${s.slides.map((_,i)=>`<button onclick="goSlide(${i})" class="slide-dot w-3 h-3 rounded-full bg-white/50 transition-all" data-dot="${i}"></button>`).join('')}
+      </div>
+    </div>
+  </section>
+
+  <!-- PRINCIPAL -->
+  <section class="max-w-7xl mx-auto px-4 py-14">
+    <div class="card p-8 md:p-12 grid md:grid-cols-3 gap-10 items-center" data-aos="fade-up">
+      <div class="text-center">
+        <div class="relative inline-block group">
+          <img src="${esc(s.principal.pic)}" class="w-52 h-52 object-cover rounded-3xl mx-auto shadow-xl transition-transform duration-500 group-hover:scale-105" alt="Principal"/>
+          <div class="absolute inset-0 rounded-3xl ring-4 ring-brand-400/40 group-hover:ring-brand-500 transition-all"></div>
+        </div>
+        <h3 class="text-xl font-extrabold mt-5">${esc(s.principal.name)}</h3>
+        <p class="text-brand-600 dark:text-brand-300 text-sm font-semibold">Principal</p>
+        <a href="${waLink(s.principal.phone,'Assalam o Alaikum respected Principal')}" target="_blank"
+           class="btn btn-primary mt-4 text-sm"><i class="fa-brands fa-whatsapp"></i> Contact Principal</a>
+      </div>
+      <div class="md:col-span-2">
+        <p class="text-xs font-bold tracking-[4px] uppercase text-brand-500 mb-3">Message from the Principal</p>
+        <i class="fa-solid fa-quote-left text-4xl text-brand-200 dark:text-brand-800"></i>
+        <p class="text-base md:text-lg leading-relaxed mt-3 text-slate-600 dark:text-slate-300">${esc(s.principal.message)}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY US -->
+  <section class="bg-gradient-to-b from-brand-50 to-white dark:from-slate-900 dark:to-slate-950 py-20">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center mb-12" data-aos="fade-up">
+        <p class="text-xs font-bold tracking-[4px] uppercase text-brand-500 mb-2">Why Choose Us</p>
+        <h2 class="section-title">The <span class="gradient-text">Inspire</span> Advantage</h2>
+      </div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        ${s.whyUs.map((w,i)=>`
+          <div class="card p-7 group" data-aos="fade-up" data-aos-delay="${i*80}">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 grid place-items-center text-white text-xl shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-400">
+              <i class="fa-solid ${w.icon}"></i>
+            </div>
+            <h3 class="font-bold text-lg mt-5 group-hover:text-brand-600 dark:group-hover:text-brand-300 transition">${esc(w.title)}</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">${esc(w.desc)}</p>
+          </div>`).join('')}
+      </div>
+    </div>
+  </section>
+
+  <!-- ADMINISTRATION -->
+  <section class="max-w-7xl mx-auto px-4 py-20">
+    <div class="text-center mb-12" data-aos="fade-up">
+      <p class="text-xs font-bold tracking-[4px] uppercase text-brand-500 mb-2">Leadership</p>
+      <h2 class="section-title">Our <span class="gradient-text">Administration</span></h2>
+    </div>
+    <div class="grid sm:grid-cols-3 gap-8">
+      ${s.administration.map((a,i)=>`
+        <div class="card overflow-hidden group" data-aos="zoom-in" data-aos-delay="${i*100}">
+          <div class="hover-zoom h-64">
+            <img src="${esc(a.pic)}" class="w-full h-full object-cover" alt="${esc(a.name)}"/>
+          </div>
+          <div class="p-5 text-center">
+            <h3 class="font-bold text-lg group-hover:text-brand-600 transition">${esc(a.name)}</h3>
+            <p class="text-sm text-brand-500 font-semibold">${esc(a.role)}</p>
+          </div>
+        </div>`).join('')}
+    </div>
+  </section>
+
+  <!-- TEACHERS -->
+  <section class="bg-brand-950 text-white py-20">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center mb-12" data-aos="fade-up">
+        <p class="text-xs font-bold tracking-[4px] uppercase text-brand-300 mb-2">Our Faculty</p>
+        <h2 class="section-title text-white">Meet Our <span class="text-brand-300">Teachers</span></h2>
+      </div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        ${DB.teachers.map((t,i)=>`
+          <div class="rounded-2xl overflow-hidden bg-white/5 border border-white/10 hover:bg-white/10 hover:-translate-y-2 transition-all duration-400 group" data-aos="fade-up" data-aos-delay="${i*80}">
+            <div class="hover-zoom h-56">
+              <img src="${esc(t.pic || IMG.avatar)}" class="w-full h-full object-cover" alt="${esc(t.name)}"/>
+            </div>
+            <div class="p-5 text-center">
+              <h3 class="font-bold">${esc(t.name)}</h3>
+              <p class="text-xs text-brand-300 mt-1">${esc(t.subject)}</p>
+              <p class="text-[11px] text-white/50 mt-1">${esc(t.education)}</p>
+              <a href="#/teacher/${t.id}" class="btn btn-ghost text-xs mt-4 w-full !py-2"><i class="fa-solid fa-user"></i> View Profile</a>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>
+  </section>
+
+  <!-- GALLERY / JOURNEY -->
+  <section class="max-w-7xl mx-auto px-4 py-20">
+    <div class="text-center mb-12" data-aos="fade-up">
+      <p class="text-xs font-bold tracking-[4px] uppercase text-brand-500 mb-2">Our Journey</p>
+      <h2 class="section-title">Moments &amp; <span class="gradient-text">Memories</span></h2>
+    </div>
+    <div id="galleryGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    <div class="text-center mt-10">
+      <button id="galleryMoreBtn" onclick="showMoreGallery()" class="btn btn-primary"><i class="fa-solid fa-images"></i> Show More</button>
+    </div>
+  </section>
+
+  <!-- MAP -->
+  <section class="max-w-7xl mx-auto px-4 pb-20">
+    <div class="card overflow-hidden" data-aos="fade-up">
+      <div class="p-6 flex flex-wrap items-center justify-between gap-4 border-b border-brand-100 dark:border-slate-800">
+        <div>
+          <h3 class="text-xl font-extrabold"><i class="fa-solid fa-map-location-dot text-brand-500 mr-2"></i>Find Us</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">${esc(s.contact.address)}</p>
+        </div>
+        <a href="${esc(s.contact.mapUrl)}" target="_blank" class="btn btn-primary text-sm"><i class="fa-solid fa-route"></i> Get Directions</a>
+      </div>
+      <a href="${esc(s.contact.mapUrl)}" target="_blank" class="block hover:opacity-90 transition">
+        <iframe src="${esc(s.contact.mapEmbed)}" class="w-full h-80 border-0 pointer-events-none" loading="lazy" title="Map"></iframe>
+      </a>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="max-w-7xl mx-auto px-4 pb-10">
+    <div class="rounded-3xl bg-gradient-to-r from-brand-600 via-brand-700 to-brand-900 p-10 md:p-16 text-center text-white relative overflow-hidden" data-aos="zoom-in">
+      <div class="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-white/10"></div>
+      <div class="absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-white/10"></div>
+      <h2 class="text-3xl md:text-4xl font-extrabold relative">Ready to Join the Inspire Family?</h2>
+      <p class="mt-3 text-white/80 relative max-w-2xl mx-auto">Admissions are open for the new academic session. Secure your child's future today.</p>
+      <div class="mt-8 flex flex-wrap justify-center gap-4 relative">
+        <button onclick="openEnrollModal()" class="btn bg-white text-brand-700 hover:bg-brand-50"><i class="fa-solid fa-user-plus"></i> Enroll Now</button>
+        <a href="#/contact" class="btn btn-ghost"><i class="fa-solid fa-phone"></i> Contact Us</a>
+      </div>
+    </div>
+  </section>`;
+}
+
+function renderAbout(){
+  const s = DB.settings;
+  return `
+  <section class="bg-gradient-to-br from-brand-900 to-brand-700 text-white py-24 relative overflow-hidden">
+    <div class="absolute inset-0 opacity-20" style="background-image:radial-gradient(circle at 30% 40%,#93cdff 0,transparent 50%)"></div>
+    <div class="max-w-7xl mx-auto px-4 relative text-center" data-aos="fade-up">
+      <h1 class="text-4xl md:text-5xl font-extrabold">About Us</h1>
+      <p class="mt-3 text-white/75 max-w-2xl mx-auto">${esc(s.tagline)}</p>
+    </div>
+  </section>
+  <section class="max-w-7xl mx-auto px-4 py-16 grid lg:grid-cols-2 gap-12 items-center">
+    <div data-aos="fade-right">
+      <div class="hover-zoom rounded-3xl shadow-2xl">
+        <img src="${esc(s.hero.image)}" class="w-full h-[380px] object-cover" alt="About"/>
+      </div>
+    </div>
+    <div data-aos="fade-left">
+      <p class="text-xs font-bold tracking-[4px] uppercase text-brand-500 mb-3">Our Story</p>
+      <h2 class="section-title mb-5">Building <span class="gradient-text">Bright Futures</span></h2>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">${esc(s.about)}</p>
+      <div class="grid grid-cols-2 gap-4 mt-8">
+        ${[['Students Enrolled', DB.students.length],['Expert Teachers', DB.teachers.length],['Classes Offered', CLASS_LIST.length],['Years of Excellence','12+']].map(([l,v])=>`
+          <div class="rounded-2xl bg-brand-50 dark:bg-slate-900 p-4 text-center hover:-translate-y-1 transition">
+            <p class="text-2xl font-extrabold text-brand-600 dark:text-brand-300">${v}</p>
+            <p class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-1">${l}</p>
+          </div>`).join('')}
+      </div>
+    </div>
+  </section>
+  <section class="max-w-7xl mx-auto px-4 pb-16">
+    <div class="card p-8 md:p-12" data-aos="fade-up">
+      <h3 class="text-2xl font-extrabold mb-3"><i class="fa-solid fa-bullseye text-brand-500 mr-2"></i>Our Mission</h3>
+      <p class="text-slate-600 dark:text-slate-300 leading-relaxed">${esc(s.mission)}</p>
+    </div>
+  </section>`;
+}
+
+function renderVision(){
+  const s = DB.settings;
+  return `
+  <section class="bg-gradient-to-br from-brand-950 via-brand-800 to-brand-600 text-white py-24 relative overflow-hidden">
+    <div class="absolute inset-0 opacity-20" style="background-image:radial-gradient(circle at 70% 30%,#bfe1ff 0,transparent 50%)"></div>
+    <div class="max-w-7xl mx-auto px-4 relative text-center" data-aos="fade-up">
+      <i class="fa-solid fa-eye text-5xl text-brand-300 mb-4"></i>
+      <h1 class="text-4xl md:text-5xl font-extrabold">Our Vision</h1>
+    </div>
+  </section>
+  <section class="max-w-5xl mx-auto px-4 py-16">
+    <div class="card p-8 md:p-12" data-aos="fade-up">
+      <p class="text-lg leading-loose text-slate-600 dark:text-slate-300 whitespace-pre-line">${esc(s.vision)}</p>
+      <div class="mt-10 text-center">
+        <button onclick="openEnrollModal()" class="btn btn-primary text-base"><i class="fa-solid fa-user-plus"></i> Enroll Now</button>
+      </div>
+    </div>
+  </section>`;
+}
+
+function renderWhyUs(){
+  const s = DB.settings;
+  return `
+  <section class="bg-gradient-to-br from-brand-900 to-brand-700 text-white py-24">
+    <div class="max-w-7xl mx-auto px-4 text-center" data-aos="fade-up">
+      <h1 class="text-4xl md:text-5xl font-extrabold">Why Choose Us</h1>
+      <p class="mt-3 text-white/75">Six reasons parents trust Inspire School System</p>
+    </div>
+  </section>
+  <section class="max-w-7xl mx-auto px-4 py-16 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    ${s.whyUs.map((w,i)=>`
+      <div class="card p-8 group" data-aos="fade-up" data-aos-delay="${i*70}">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 grid place-items-center text-white text-2xl shadow-lg group-hover:rotate-6 group-hover:scale-110 transition-all duration-400">
+          <i class="fa-solid ${w.icon}"></i>
+        </div>
+        <h3 class="font-bold text-lg mt-5">${esc(w.title)}</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">${esc(w.desc)}</p>
+      </div>`).join('')}
+  </section>`;
+}
+
+function renderClasses(){
+  return `
+  <section class="bg-gradient-to-br from-brand-900 to-brand-700 text-white py-24">
+    <div class="max-w-7xl mx-auto px-4 text-center" data-aos="fade-up">
+      <h1 class="text-4xl md:text-5xl font-extrabold">Our Classes</h1>
+      <p class="mt-3 text-white/75">From ECE to Matriculation and Academy — a complete academic journey</p>
+    </div>
+  </section>
+  <section class="max-w-7xl mx-auto px-4 py-16">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      ${CLASS_LIST.map((c,i)=>{
+        const count = DB.students.filter(s=>s.className===c).length;
+        return `<a href="#/class/${encodeURIComponent(c)}" class="card p-6 group block" data-aos="fade-up" data-aos-delay="${(i%6)*60}">
+          <div class="flex items-center justify-between">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 grid place-items-center text-white text-xl shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-400">
+              <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <span class="text-xs font-bold px-3 py-1 rounded-full bg-brand-50 dark:bg-slate-800 text-brand-600 dark:text-brand-300">${count} Students</span>
+          </div>
+          <h3 class="font-extrabold text-lg mt-5 group-hover:text-brand-600 dark:group-hover:text-brand-300 transition">${esc(c)}</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">Monthly Fee: ${money(DB.classes[c]?.fee || 3000)}</p>
+          <p class="text-sm text-brand-600 dark:text-brand-300 mt-4 font-semibold flex items-center gap-2">View Details <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition"></i></p>
+        </a>`;
+      }).join('')}
+    </div>
+  </section>`;
+}
+
+function renderClassDetail(clsName){
+  const info = DB.classes[clsName] || { name: clsName, details:'Details coming soon.', subjects:[], planning:'', fee:3000 };
+  const students = DB.students.filter(s => s.className === clsName);
+  const teachers = DB.teachers.filter(t => (t.classes||[]).includes(clsName) || t.classTeacherOf === clsName);
+  const acts = DB.activities.filter(a => a.className === clsName);
+  const notes = DB.notes.filter(n => n.className === clsName);
+
+  return `
+  <section class="bg-gradient-to-br from-brand-950 via-brand-800 to-brand-600 text-white py-24 relative overflow-hidden">
+    <div class="absolute inset-0 opacity-20" style="background-image:radial-gradient(circle at 25% 60%,#93cdff 0,transparent 50%)"></div>
+    <div class="max-w-7xl mx-auto px-4 relative" data-aos="fade-up">
+      <a href="#/classes" class="text-brand-200 text-sm hover:text-white transition"><i class="fa-solid fa-arrow-left mr-1"></i> Back to Classes</a>
+      <h1 class="text-4xl md:text-5xl font-extrabold mt-3">${esc(clsName)}</h1>
+      <p class="mt-3 text-white/75 max-w-2xl">${esc(info.details)}</p>
+      <div class="mt-6 flex flex-wrap gap-3">
+        <span class="px-4 py-2 rounded-xl bg-white/15 border border-white/25 text-sm"><i class="fa-solid fa-users mr-2"></i>${students.length} Students</span>
+        <span class="px-4 py-2 rounded-xl bg-white/15 border border-white/25 text-sm"><i class="fa-solid fa-money-bill-wave mr-2"></i>${money(info.fee)} / month</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-4 py-14 grid lg:grid-cols-3 gap-6">
+    <div class="card p-7" data-aos="fade-up">
+      <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-book-open text-brand-500 mr-2"></i>Subjects</h3>
+      <div class="flex flex-wrap gap-2">
+        ${(info.subjects||[]).map(s=>`<span class="px-3 py-1.5 rounded-lg bg-brand-50 dark:bg-slate-800 text-brand-700 dark:text-brand-300 text-xs font-semibold hover:scale-105 transition">${esc(s)}</span>`).join('') || '<p class="text-sm text-slate-400">Not specified</p>'}
+      </div>
+    </div>
+    <div class="card p-7 lg:col-span-2" data-aos="fade-up" data-aos-delay="80">
+      <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-calendar-check text-brand-500 mr-2"></i>Study Planning</h3>
+      <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">${esc(info.planning || 'Planning will be shared soon.')}</p>
+    </div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-4 pb-14">
+    <h3 class="text-2xl font-extrabold mb-6" data-aos="fade-up"><i class="fa-solid fa-chalkboard-user text-brand-500 mr-2"></i>Teachers</h3>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      ${teachers.map((t,i)=>`
+        <div class="card p-5 text-center group" data-aos="zoom-in" data-aos-delay="${i*70}">
+          <img src="${esc(t.pic||IMG.avatar)}" class="w-24 h-24 rounded-2xl object-cover mx-auto group-hover:scale-105 transition" alt=""/>
+          <h4 class="font-bold mt-4">${esc(t.name)}</h4>
+          <p class="text-xs text-brand-500">${esc(t.subject)}</p>
+          <a href="#/teacher/${t.id}" class="text-xs text-brand-600 dark:text-brand-300 font-semibold mt-3 inline-block hover:underline">View Profile →</a>
+        </div>`).join('') || '<p class="text-sm text-slate-400">No teacher assigned yet.</p>'}
+    </div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-4 pb-14">
+    <h3 class="text-2xl font-extrabold mb-6" data-aos="fade-up"><i class="fa-solid fa-list-check text-brand-500 mr-2"></i>Enrolled Students (${students.length})</h3>
+    <div class="card overflow-hidden" data-aos="fade-up">
+      <div class="overflow-x-auto scrollbar-thin">
+        <table class="w-full text-sm">
+          <thead class="bg-brand-50 dark:bg-slate-800 text-left">
+            <tr><th class="p-4 font-bold">#</th><th class="p-4 font-bold">Name</th><th class="p-4 font-bold">Father Name</th><th class="p-4 font-bold">Fee</th></tr>
+          </thead>
+          <tbody>
+            ${students.map((s,i)=>`<tr class="border-t border-brand-100 dark:border-slate-800 hover:bg-brand-50/60 dark:hover:bg-slate-800/60 transition">
+              <td class="p-4">${i+1}</td><td class="p-4 font-semibold">${esc(s.name)}</td><td class="p-4">${esc(s.father)}</td><td class="p-4">${money(s.fees)}</td></tr>`).join('') || '<tr><td colspan="4" class="p-6 text-center text-slate-400">No students enrolled yet.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-4 pb-14">
+    <h3 class="text-2xl font-extrabold mb-6" data-aos="fade-up"><i class="fa-solid fa-images text-brand-500 mr-2"></i>Class Activities</h3>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      ${acts.map((a,i)=>`
+        <div class="card overflow-hidden group" data-aos="fade-up" data-aos-delay="${i*70}">
+          <div class="hover-zoom h-48"><img src="${esc(a.img||IMG.g1)}" class="w-full h-full object-cover" alt=""/></div>
+          <div class="p-5">
+            <h4 class="font-bold group-hover:text-brand-600 transition">${esc(a.title)}</h4>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">${esc(a.desc)}</p>
+            <p class="text-[11px] text-brand-500 mt-3"><i class="fa-regular fa-calendar mr-1"></i>${esc(a.date)}</p>
+          </div>
+        </div>`).join('') || '<p class="text-sm text-slate-400">No activities uploaded yet.</p>'}
+    </div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-4 pb-16">
+    <h3 class="text-2xl font-extrabold mb-6" data-aos="fade-up"><i class="fa-solid fa-file-lines text-brand-500 mr-2"></i>Homework &amp; Notes</h3>
+    <div class="grid sm:grid-cols-2 gap-4">
+      ${notes.map(n=>`
+        <div class="card p-5 flex items-start gap-4 hover:border-brand-300" data-aos="fade-up">
+          <div class="w-11 h-11 rounded-xl bg-brand-50 dark:bg-slate-800 grid place-items-center text-brand-600 dark:text-brand-300 shrink-0"><i class="fa-solid fa-file-pdf"></i></div>
+          <div class="min-w-0">
+            <h4 class="font-bold text-sm">${esc(n.title)}</h4>
+            <p class="text-xs text-slate-500 mt-1">${esc(n.subject)} • ${esc(n.type)} • ${esc(n.date)}</p>
+            ${n.content ? `<a href="${esc(n.content)}" target="_blank" class="text-xs text-brand-600 dark:text-brand-300 font-semibold hover:underline">Open File →</a>` : ''}
+          </div>
+        </div>`).join('') || '<p class="text-sm text-slate-400">No homework uploaded yet.</p>'}
+    </div>
+  </section>`;
+}
+
+function renderTeacherProfile(id){
+  const t = DB.teachers.find(x=>x.id===id);
+  if (!t) return `<div class="max-w-3xl mx-auto px-4 py-24 text-center"><h2 class="text-2xl font-bold">Teacher not found</h2><a href="#/home" class="btn btn-primary mt-6">Go Home</a></div>`;
+  return `
+  <section class="bg-gradient-to-br from-brand-950 to-brand-700 text-white py-20">
+    <div class="max-w-5xl mx-auto px-4 flex flex-col md:flex-row items-center gap-8" data-aos="fade-up">
+      <img src="${esc(t.pic||IMG.avatar)}" class="w-40 h-40 rounded-3xl object-cover ring-4 ring-white/30 shadow-2xl" alt=""/>
+      <div class="text-center md:text-left">
+        <h1 class="text-3xl md:text-4xl font-extrabold">${esc(t.name)}</h1>
+        <p class="text-brand-200 mt-2"><i class="fa-solid fa-book mr-2"></i>${esc(t.subject)}</p>
+        <p class="text-white/60 text-sm mt-1">${esc(t.education)}</p>
+      </div>
+    </div>
+  </section>
+  <section class="max-w-5xl mx-auto px-4 py-12 grid md:grid-cols-2 gap-6">
+    ${[['Education',t.education,'fa-graduation-cap'],['Experience',t.timing,'fa-clock'],['Contact',t.contact,'fa-phone'],['Email',t.email,'fa-envelope'],['Classes',(t.classes||[]).join(', ')||'—','fa-layer-group'],['Class Teacher Of',t.classTeacherOf||'—','fa-user-tie']]
+      .map(([l,v,ic])=>`
+      <div class="card p-6 flex items-center gap-4" data-aos="fade-up">
+        <div class="w-12 h-12 rounded-xl bg-brand-50 dark:bg-slate-800 grid place-items-center text-brand-600 dark:text-brand-300"><i class="fa-solid ${ic}"></i></div>
+        <div><p class="text-xs uppercase tracking-widest text-slate-400 font-bold">${l}</p><p class="font-semibold">${esc(v||'—')}</p></div>
+      </div>`).join('')}
+  </section>
+  <section class="max-w-5xl mx-auto px-4 pb-16 text-center">
+    <a href="${waLink(t.contact, 'Assalam o Alaikum ' + t.name)}" target="_blank" class="btn btn-primary"><i class="fa-brands fa-whatsapp"></i> Contact on WhatsApp</a>
+    <a href="#/home" class="btn btn-ghost !text-brand-700 dark:!text-brand-300 !border-brand-300 ml-2"><i class="fa-solid fa-arrow-left"></i> Back</a>
+  </section>`;
+}
+
+function renderNotes(){
+  return `
+  <section class="bg-gradient-to-br from-brand-900 to-brand-700 text-white py-24">
+    <div class="max-w-7xl mx-auto px-4 text-center" data-aos="fade-up">
+      <h1 class="text-4xl md:text-5xl font-extrabold">Notes &amp; Tests</h1>
+      <p class="mt-3 text-white/75">Download study material uploaded by our teachers</p>
+    </div>
+  </section>
+  <section class="max-w-7xl mx-auto px-4 py-14">
+    <div class="grid md:grid-cols-4 gap-4 mb-8">
+      <select id="filterClass" class="input" onchange="renderNotesList()">
+        <option value="">All Classes</option>
+        ${CLASS_LIST.map(c=>`<option>${c}</option>`).join('')}
+      </select>
+      <input id="filterSubject" class="input" placeholder="Filter by subject..." oninput="renderNotesList()"/>
+      <select id="filterType" class="input" onchange="renderNotesList()">
+        <option value="">All Types</option><option>Note</option><option>Test</option>
+      </select>
+      <a href="#/portal/student" class="btn btn-primary"><i class="fa-solid fa-right-to-bracket"></i> Student Portal</a>
+    </div>
+    <div id="notesList" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+  </section>`;
+}
+
+function renderNotesList(){
+  const c = document.getElementById('filterClass')?.value || '';
+  const s = (document.getElementById('filterSubject')?.value || '').toLowerCase();
+  const ty = document.getElementById('filterType')?.value || '';
+  const list = DB.notes.filter(n => (!c || n.className===c) && (!s || (n.subject||'').toLowerCase().includes(s)) && (!ty || n.type===ty));
+  const box = document.getElementById('notesList');
+  if (!box) return;
+  box.innerHTML = list.map(n=>`
+    <div class="card p-6 group" data-aos="fade-up">
+      <div class="flex items-center justify-between">
+        <span class="text-[10px] font-bold px-2.5 py-1 rounded-full ${n.type==='Test'?'bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-300':'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-300'}">${esc(n.type)}</span>
+        <span class="text-xs text-slate-400">${esc(n.date)}</span>
+      </div>
+      <h4 class="font-bold mt-3 group-hover:text-brand-600 transition">${esc(n.title)}</h4>
+      <p class="text-xs text-slate-500 mt-1">${esc(n.className)} • ${esc(n.subject)}</p>
+      ${n.content?`<a href="${esc(n.content)}" target="_blank" class="btn btn-primary text-xs mt-4 w-full !py-2"><i class="fa-solid fa-download"></i> Open</a>`:''}
+    </div>`).join('') || '<div class="col-span-full text-center py-16 text-slate-400"><i class="fa-solid fa-folder-open text-4xl mb-3"></i><p>No material found.</p></div>';
+  if (window.AOS) AOS.refreshHard();
+}
+
+function renderContact(){
+  const c = DB.settings.contact;
+  return `
+  <section class="bg-gradient-to-br from-brand-950 via-brand-800 to-brand-600 text-white py-24">
+    <div class="max-w-7xl mx-auto px-4 text-center" data-aos="fade-up">
+      <h1 class="text-4xl md:text-5xl font-extrabold">Contact Us</h1>
+      <p class="mt-3 text-white/75">We would love to hear from you</p>
+    </div>
+  </section>
+  <section class="max-w-7xl mx-auto px-4 py-14 grid lg:grid-cols-2 gap-8">
+    <div class="space-y-4" data-aos="fade-right">
+      ${[['fa-phone','Phone Numbers', c.phones.join('  •  ')],['fa-envelope','Email Address', c.email],['fa-location-dot','Campus Address', c.address]].map(([ic,t,v])=>`
+        <div class="card p-6 flex items-start gap-4 hover:border-brand-300">
+          <div class="w-12 h-12 rounded-xl bg-brand-50 dark:bg-slate-800 grid place-items-center text-brand-600 dark:text-brand-300 shrink-0"><i class="fa-solid ${ic}"></i></div>
+          <div><p class="text-xs uppercase tracking-widest font-bold text-slate-400">${t}</p><p class="font-semibold mt-1">${esc(v)}</p></div>
+        </div>`).join('')}
+      <a href="${esc(c.mapUrl)}" target="_blank" class="card p-0 overflow-hidden block hover:opacity-90 transition">
+        <iframe src="${esc(c.mapEmbed)}" class="w-full h-56 border-0 pointer-events-none" loading="lazy" title="map"></iframe>
+      </a>
+    </div>
+    <div class="card p-7 md:p-9" data-aos="fade-left">
+      <h3 class="text-2xl font-extrabold mb-1">Send us a Message</h3>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Your message will be sent directly to our WhatsApp.</p>
+      <form onsubmit="submitContactForm(event)" class="space-y-4">
+        <div><label class="label">Your Name *</label><input required name="name" class="input" placeholder="Full name"/></div>
+        <div><label class="label">Class (Optional)</label>
+          <select name="className" class="input"><option value="">— Select —</option>${CLASS_LIST.map(x=>`<option>${x}</option>`).join('')}</select>
+        </div>
+        <div><label class="label">Phone *</label><input required name="phone" class="input" placeholder="03XX-XXXXXXX"/></div>
+        <div><label class="label">Message *</label><textarea required name="message" rows="4" class="input" placeholder="Write your message..."></textarea></div>
+        <button class="btn btn-primary w-full"><i class="fa-brands fa-whatsapp"></i> Send via WhatsApp</button>
+      </form>
+    </div>
+  </section>`;
+}
+
+/* =========================================================
+   GALLERY
+   ========================================================= */
+let galleryShown = 6;
+function renderGallery(){
+  const list = DB.settings.gallery.slice(0, galleryShown);
+  const grid = document.getElementById('galleryGrid');
+  if (!grid) return;
+  grid.innerHTML = list.map((g,i)=>`
+    <div class="card overflow-hidden group" data-aos="fade-up" data-aos-delay="${(i%3)*70}">
+      <div class="hover-zoom h-56 relative">
+        <img src="${esc(g.img)}" class="w-full h-full object-cover" alt="${esc(g.title)}"/>
+        <div class="absolute inset-0 bg-gradient-to-t from-brand-950/90 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-5">
+          <p class="text-white text-sm">${esc(g.desc)}</p>
+        </div>
+      </div>
+      <div class="p-5">
+        <h4 class="font-bold group-hover:text-brand-600 dark:group-hover:text-brand-300 transition">${esc(g.title)}</h4>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">${esc(g.desc)}</p>
+      </div>
+    </div>`).join('');
+  const btn = document.getElementById('galleryMoreBtn');
+  if (btn) btn.style.display = galleryShown >= DB.settings.gallery.length ? 'none' : 'inline-flex';
+  if (window.AOS) AOS.refreshHard();
+}
+function showMoreGallery(){ galleryShown += 6; renderGallery(); }
+
+/* =========================================================
+   SLIDESHOW
+   ========================================================= */
+let slideIdx = 0, slideTimer = null;
+function startSlideshow(){
+  clearInterval(slideTimer);
+  const items = document.querySelectorAll('.slide-item');
+  if (!items.length) return;
+  slideIdx = 0;
+  const go = i => {
+    document.querySelectorAll('.slide-item').forEach((el,k)=>el.classList.toggle('opacity-0', k!==i));
+    document.querySelectorAll('.slide-dot').forEach((d,k)=>{ d.classList.toggle('bg-white',k===i); d.classList.toggle('w-8',k===i); d.classList.toggle('bg-white/50',k!==i); d.classList.toggle('w-3',k!==i); });
+  };
+  go(0);
+  slideTimer = setInterval(()=>{ slideIdx = (slideIdx+1) % document.querySelectorAll('.slide-item').length; go(slideIdx); }, 5000);
+  window.goSlide = i => { slideIdx = i; go(i); };
+}
+
+/* =========================================================
+   ENROLL MODAL / ADMISSION FORM
+   ========================================================= */
+function openEnrollModal(){
+  openModal(`
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <h3 class="text-2xl font-extrabold">Admission Enquiry</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Fill the form — we'll continue on WhatsApp.</p>
+      </div>
+      <button onclick="closeModal()" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-100 hover:text-rose-600 transition"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form onsubmit="submitEnroll(event)" class="space-y-4">
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div><label class="label">Student Name *</label><input required name="name" class="input" placeholder="Full name"/></div>
+        <div><label class="label">Father Name *</label><input required name="father" class="input" placeholder="Father's name"/></div>
+        <div><label class="label">B-Form Number *</label><input required name="bform" class="input" placeholder="XXXXX-XXXXXXX-X"/></div>
+        <div><label class="label">Class *</label><select required name="className" class="input">${CLASS_LIST.map(c=>`<option>${c}</option>`).join('')}</select></div>
+        <div><label class="label">Phone *</label><input required name="phone" class="input" placeholder="03XX-XXXXXXX"/></div>
+        <div><label class="label">Optional Subject</label><input name="subject" class="input" placeholder="e.g. Computer Science"/></div>
+        <div class="sm:col-span-2"><label class="label">Address *</label><input required name="address" class="input" placeholder="Complete address"/></div>
+        <div class="sm:col-span-2"><label class="label">Email (Optional)</label><input name="email" type="email" class="input" placeholder="you@example.com"/></div>
+      </div>
+      <button class="btn btn-primary w-full text-base"><i class="fa-brands fa-whatsapp"></i> Submit via WhatsApp</button>
+    </form>`);
+}
+
+function submitEnroll(e){
+  e.preventDefault();
+  const f = e.target;
+  const d = Object.fromEntries(new FormData(f).entries());
+  const msg =
+`*ADMISSION ENQUIRY — INSPIRE SCHOOL SYSTEM*
+------------------------------------
+*Student Name:* ${d.name}
+*Father Name:* ${d.father}
+*B-Form:* ${d.bform}
+*Class:* ${d.className}
+*Phone:* ${d.phone}
+*Optional Subject:* ${d.subject || 'N/A'}
+*Address:* ${d.address}
+*Email:* ${d.email || 'N/A'}
+------------------------------------
+Sent from Inspire School System Website`;
+  window.open(waLink('03044315566', msg), '_blank');
+  closeModal();
+  alertOk('Redirecting to WhatsApp', 'Your admission enquiry is ready to send.');
+}
+
+function submitContactForm(e){
+  e.preventDefault();
+  const d = Object.fromEntries(new FormData(e.target).entries());
+  const msg =
+`*CONTACT MESSAGE — INSPIRE SCHOOL SYSTEM*
+------------------------------------
+*Name:* ${d.name}
+*Class:* ${d.className || 'N/A'}
+*Phone:* ${d.phone}
+*Message:* ${d.message}
+------------------------------------`;
+  window.open(waLink('03054315566', msg), '_blank');
+  e.target.reset();
+  alertOk('Message Ready!', 'Complete the send in WhatsApp.');
+}
+
+function downloadAdmissionForm(){
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Inspire School System — Admission Form</title>
+  <style>body{font-family:Segoe UI,Arial,sans-serif;padding:40px;color:#0b2f63;max-width:800px;margin:auto}
+  h1{color:#1e6fd9;text-align:center;margin-bottom:0} h3{text-align:center;margin-top:4px;font-weight:400;letter-spacing:2px}
+  .line{border-bottom:1.5px dotted #1e6fd9;display:inline-block;min-width:220px;height:22px}
+  table{width:100%;border-collapse:collapse;margin-top:24px} td{padding:12px 6px;font-size:15px}
+  .box{border:2px solid #1e6fd9;border-radius:12px;padding:20px;margin-top:20px}
+  .foot{margin-top:34px;font-size:12px;color:#5b7796;text-align:center}</style></head><body>
+  <h1>Inspire School System</h1><h3>MUZAFFARGARH — ADMISSION FORM</h3>
+  <div class="box"><table>
+  <tr><td>Student Name:</td><td><span class="line"></span></td></tr>
+  <tr><td>Father Name:</td><td><span class="line"></span></td></tr>
+  <tr><td>B-Form No:</td><td><span class="line"></span></td></tr>
+  <tr><td>Date of Birth:</td><td><span class="line"></span></td></tr>
+  <tr><td>Class Applied For:</td><td><span class="line"></span></td></tr>
+  <tr><td>Optional Subject:</td><td><span class="line"></span></td></tr>
+  <tr><td>Phone:</td><td><span class="line"></span></td></tr>
+  <tr><td>Email:</td><td><span class="line"></span></td></tr>
+  <tr><td>Address:</td><td><span class="line"></span></td></tr>
+  <tr><td>Previous School:</td><td><span class="line"></span></td></tr>
+  <tr><td>Guardian Signature:</td><td><span class="line"></span></td></tr>
+  </table></div>
+  <div class="foot">0303-4401641 &nbsp;|&nbsp; 0305-4315566 &nbsp;|&nbsp; inspireschoolsystem77@gmail.com</div>
+  </body></html>`;
+  const blob = new Blob([html], { type:'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Inspire-School-Admission-Form.html';
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('success','Admission Form Downloaded');
+}
+
+/* =========================================================
+   ROUTER — PUBLIC
+   ========================================================= */
+function showSite(){
+  document.getElementById('site').classList.remove('hidden');
+  document.getElementById('site').classList.add('opacity-100');
+  document.getElementById('portalRoot').classList.add('hidden');
+  document.getElementById('waFloat').classList.remove('hidden');
+}
+
+function router(){
+  const hash = decodeURIComponent(location.hash.replace(/^#\/?/, '')) || 'home';
+  const parts = hash.split('/');
+  const route = parts[0];
+  const param = parts.slice(1).join('/');
+
+  if (route === 'portal'){
+    showPortal(param || 'admin');
+    return;
+  }
+
+  showSite();
+  const main = document.getElementById('main');
+  let html = '';
+
+  switch(route){
+    case 'about':    html = renderAbout(); break;
+    case 'contact':  html = renderContact(); break;
+    case 'vision':   html = renderVision(); break;
+    case 'classes':  html = renderClasses(); break;
+    case 'class':    html = renderClassDetail(param); break;
+    case 'whyus':    html = renderWhyUs(); break;
+    case 'notes':    html = renderNotes(); break;
+    case 'teacher':  html = renderTeacherProfile(param); break;
+    default:         html = renderHome();
+  }
+
+  main.innerHTML = html;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  if (route === 'home'){ galleryShown = 6; renderGallery(); startSlideshow(); }
+  if (route === 'notes'){ renderNotesList(); }
+  if (window.AOS) AOS.refreshHard();
+  document.getElementById('mobileNav').classList.add('hidden');
+  renderFooter();
+}
+
+/* =========================================================
+   PORTAL SHELL
+   ========================================================= */
+function showPortal(type){
+  document.getElementById('site').classList.add('hidden');
+  document.getElementById('waFloat').classList.add('hidden');
+  const root = document.getElementById('portalRoot');
+  root.classList.remove('hidden');
+  window.scrollTo({ top:0 });
+  const sess = getSession();
+  if (!sess || sess.role !== type){
+    renderPortalLogin(type);
+  } else {
+    renderPortalDashboard(type, sess);
+  }
+}
+
+function portalShell(title, subtitle, navItems, activeTab, contentHTML, onTabFn){
+  return `
+  <div class="min-h-screen flex bg-slate-100 dark:bg-slate-950">
+    <!-- SIDEBAR -->
+    <aside id="portalSidebar" class="fixed lg:static inset-y-0 left-0 z-50 w-72 bg-brand-950 text-white flex flex-col -translate-x-full lg:translate-x-0 transition-transform duration-300">
+      <div class="p-6 flex items-center gap-3 border-b border-white/10">
+        ${logoSVG('w-11 h-11')}
+        <div class="leading-tight">
+          <p class="font-extrabold text-sm">Inspire School System</p>
+          <p class="text-[10px] tracking-[2px] uppercase text-brand-300">${esc(title)}</p>
+        </div>
+      </div>
+      <nav class="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-1">
+        ${navItems.map(n=>`<button onclick="${n.fn}" class="tab-btn ${n.id===activeTab?'active':''}">
+          <i class="fa-solid ${n.icon} w-4"></i> ${n.label}</button>`).join('')}
+      </nav>
+      <div class="p-3 border-t border-white/10 space-y-2">
+        <div id="syncBadge" class="text-[11px] flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5">
+          <span class="pulse-dot"></span> Cloud Synced
+        </div>
+        <a href="#/home" class="tab-btn"><i class="fa-solid fa-globe w-4"></i> View Website</a>
+        <button onclick="logoutPortal()" class="tab-btn text-rose-300 hover:!bg-rose-500/20"><i class="fa-solid fa-right-from-bracket w-4"></i> Logout</button>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="flex-1 min-w-0">
+      <header class="sticky top-0 z-30 glass border-b border-brand-100 dark:border-slate-800 px-5 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <button onclick="document.getElementById('portalSidebar').classList.toggle('-translate-x-full')" class="lg:hidden w-10 h-10 rounded-xl bg-brand-600 text-white grid place-items-center"><i class="fa-solid fa-bars"></i></button>
+          <div>
+            <h1 class="font-extrabold text-lg">${esc(subtitle)}</h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400">${new Date().toDateString()}</p>
+          </div>
+        </div>
+        <button onclick="toggleTheme()" class="w-10 h-10 rounded-xl bg-brand-50 dark:bg-slate-800 text-brand-700 dark:text-brand-300 hover:scale-110 transition"><i class="fa-solid fa-moon"></i></button>
+      </header>
+      <main class="p-5 lg:p-8 max-w-[1400px] mx-auto">${contentHTML}</main>
+    </div>
+  </div>`;
+}
+
+function logoutPortal(){
+  Swal.fire({
+    title:'Logout?', text:'You will be returned to the public website.',
+    icon:'question', showCancelButton:true, confirmButtonText:'Yes, Logout',
+    confirmButtonColor:'#1e6fd9', cancelButtonColor:'#64748b',
+    background: document.documentElement.classList.contains('dark') ? '#0f172a' : '#fff',
+    color: document.documentElement.classList.contains('dark') ? '#e2e8f0' : '#0f172a'
+  }).then(r => { if (r.isConfirmed){ clearSession(); location.hash = '#/home'; } });
+}
+
+/* =========================================================
+   PORTAL LOGIN SCREENS
+   ========================================================= */
+function renderPortalLogin(type){
+  const meta = {
+    admin: { title:'Administrator Login', icon:'fa-user-shield', color:'from-brand-900 to-brand-600' },
+    teacher: { title:'Teacher Login', icon:'fa-chalkboard-user', color:'from-emerald-900 to-emerald-600' },
+    student: { title:'Students & Parents', icon:'fa-user-graduate', color:'from-indigo-900 to-indigo-600' }
+  }[type] || { title:'Login', icon:'fa-user', color:'from-brand-900 to-brand-600' };
+
+  let fields = '';
+  if (type === 'admin'){
+    fields = `<div><label class="label">Password</label>
+      <input id="loginPass" type="password" class="input" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')doAdminLogin()"/></div>
+      <button onclick="doAdminLogin()" class="btn btn-primary w-full mt-2"><i class="fa-solid fa-lock-open"></i> Unlock Dashboard</button>`;
+  } else if (type === 'teacher'){
+    fields = `<div><label class="label">Select Your Name</label>
+      <select id="loginTeacher" class="input">${DB.teachers.map(t=>`<option value="${t.id}">${esc(t.name)} — ${esc(t.subject)}</option>`).join('')}</select></div>
+      <div><label class="label">Password</label>
+      <input id="loginPass" type="password" class="input" placeholder="Enter your password" onkeydown="if(event.key==='Enter')doTeacherLogin()"/></div>
+      <button onclick="doTeacherLogin()" class="btn btn-primary w-full mt-2"><i class="fa-solid fa-right-to-bracket"></i> Login</button>`;
+  } else {
+    fields = `<div><label class="label">Select Your Class</label>
+      <select id="loginClass" class="input">${CLASS_LIST.map(c=>`<option>${c}</option>`).join('')}</select></div>
+      <div><label class="label">Select Your Name</label>
+      <select id="loginStudent" class="input"></select></div>
+      <button onclick="doStudentLogin()" class="btn btn-primary w-full mt-2"><i class="fa-solid fa-right-to-bracket"></i> Enter Portal</button>
+      <p class="text-[11px] text-center text-slate-400 mt-2">No password required for students &amp; parents.</p>`;
+  }
+
+  document.getElementById('portalRoot').innerHTML = `
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br ${meta.color} p-4 relative overflow-hidden">
+    <div class="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-white/10 blur-2xl"></div>
+    <div class="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-white/10 blur-2xl"></div>
+    <div class="w-full max-w-md relative">
+      <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-8 slide-fade">
+        <div class="text-center mb-7">
+          <div class="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 grid place-items-center text-white text-3xl shadow-lg mb-4">
+            <i class="fa-solid ${meta.icon}"></i>
+          </div>
+          <h2 class="text-2xl font-extrabold">${meta.title}</h2>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Inspire School System Muzaffargarh</p>
+        </div>
+        <div class="space-y-4">${fields}</div>
+        <a href="#/home" class="block text-center text-xs text-slate-400 hover:text-brand-500 mt-6 transition"><i class="fa-solid fa-arrow-left mr-1"></i> Back to Website</a>
+      </div>
+      <div class="flex justify-center gap-2 mt-5">
+        <a href="#/portal/admin" class="px-3 py-1.5 rounded-lg bg-white/15 text-white text-xs font-semibold hover:bg-white/25 transition">Admin</a>
+        <a href="#/portal/teacher" class="px-3 py-1.5 rounded-lg bg-white/15 text-white text-xs font-semibold hover:bg-white/25 transition">Teacher</a>
+        <a href="#/portal/student" class="px-3 py-1.5 rounded-lg bg-white/15 text-white text-xs font-semibold hover:bg-white/25 transition">Students</a>
+      </div>
+    </div>
+  </div>`;
+
+  if (type === 'student'){
+    const cls = document.getElementById('loginClass');
+    const fill = () => {
+      const list = DB.students.filter(s=>s.className===cls.value);
+      document.getElementById('loginStudent').innerHTML = list.map(s=>`<option value="${s.id}">${esc(s.name)} — ${esc(s.father)}</option>`).join('') || '<option value="">No students in this class</option>';
+    };
+    cls.onchange = fill; fill();
+  }
+}
+
+function doAdminLogin(){
+  const p = document.getElementById('loginPass').value;
+  if (p === DB.settings.adminPassword){
+    setSession({ role:'admin', name:'Administrator' });
+    alertOk('Welcome Admin!', 'Access granted.');
+    renderPortalDashboard('admin', getSession());
+  } else alertErr('Wrong Password', 'Please try again.');
+}
+
+function doTeacherLogin(){
+  const id = document.getElementById('loginTeacher').value;
+  const p = document.getElementById('loginPass').value;
+  const t = DB.teachers.find(x=>x.id===id);
+  if (t && p === t.password){
+    setSession({ role:'teacher', id:t.id, name:t.name });
+    alertOk('Welcome, ' + t.name, 'Login successful.');
+    renderPortalDashboard('teacher', getSession());
+  } else alertErr('Login Failed', 'Incorrect password.');
+}
+
+function doStudentLogin(){
+  const cls = document.getElementById('loginClass').value;
+  const sid = document.getElementById('loginStudent').value;
+  const st = DB.students.find(s=>s.id===sid);
+  setSession({ role:'student', className: cls, studentId: sid, name: st ? st.name : cls });
+  renderPortalDashboard('student', getSession());
+}
+
+/* =========================================================
+   PORTAL DASHBOARD DISPATCH
+   ========================================================= */
+let adminTab = 'dashboard';
+let teacherTab = 'dashboard';
+let studentTab = 'overview';
+
+function renderPortalDashboard(role, sess){
+  if (role === 'admin') renderAdminPanel();
+  else if (role === 'teacher') renderTeacherPanel(sess);
+  else renderStudentPanel(sess);
+}
+
+/* =========================================================
+   ADMIN PANEL
+   ========================================================= */
+function renderAdminPanel(){
+  const nav = [
+    { id:'dashboard', label:'Dashboard', icon:'fa-gauge-high', fn:"adminGo('dashboard')" },
+    { id:'website', label:'Website Editor', icon:'fa-pen-ruler', fn:"adminGo('website')" },
+    { id:'finance', label:'Finance', icon:'fa-wallet', fn:"adminGo('finance')" },
+    { id:'teachers', label:'Teachers', icon:'fa-chalkboard-user', fn:"adminGo('teachers')" },
+    { id:'students', label:'Students', icon:'fa-user-graduate', fn:"adminGo('students')" },
+    { id:'academics', label:'Academics', icon:'fa-book', fn:"adminGo('academics')" },
+    { id:'announcements', label:'Announcements', icon:'fa-bullhorn', fn:"adminGo('announcements')" },
+    { id:'settings', label:'Settings', icon:'fa-gear', fn:"adminGo('settings')" }
+  ];
+  const content = {
+    dashboard: adminDashboardHTML,
+    website: adminWebsiteHTML,
+    finance: adminFinanceHTML,
+    teachers: adminTeachersHTML,
+    students: adminStudentsHTML,
+    academics: adminAcademicsHTML,
+    announcements: adminAnnouncementsHTML,
+    settings: adminSettingsHTML
+  }[adminTab] || adminDashboardHTML;
+
+  document.getElementById('portalRoot').innerHTML =
+    portalShell('Admin Panel', 'Administrator Dashboard', nav, adminTab, content());
+  setSyncBadge(syncState);
+  if (window.AOS) AOS.refreshHard();
+}
+
+function adminGo(tab){ adminTab = tab; renderAdminPanel(); }
+
+function adminDashboardHTML(){
+  const feesTotal = DB.fees.reduce((a,f)=>a+Number(f.amount||0),0);
+  const expTotal = DB.expenses.reduce((a,e)=>a+Number(e.amount||0),0)
+                 + DB.salaries.reduce((a,s)=>a+Number(s.amount||0),0);
+  const todayAtt = DB.attendance.students[today()] || {};
+  const absent = DB.students.filter(s => todayAtt[s.id] === 'Absent');
+  const tAtt = DB.attendance.teachers[today()] || {};
+  const presentT = DB.teachers.filter(t => tAtt[t.id] === 'Present').length;
+
+  return `
+  <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+    ${[
+      ['Total Students', DB.students.length, 'fa-user-graduate', 'from-brand-500 to-brand-700'],
+      ['Fees Collected', money(feesTotal), 'fa-hand-holding-dollar', 'from-emerald-500 to-emerald-700'],
+      ['Total Expenses', money(expTotal), 'fa-arrow-trend-down', 'from-rose-500 to-rose-700'],
+      ['Teachers Present', presentT + ' / ' + DB.teachers.length, 'fa-chalkboard-user', 'from-violet-500 to-violet-700']
+    ].map(([l,v,ic,g])=>`
+      <div class="dash-card bg-gradient-to-br ${g} shadow-lg">
+        <i class="fa-solid ${ic} absolute right-5 bottom-4 text-4xl opacity-25"></i>
+        <p class="text-xs uppercase tracking-widest opacity-80">${l}</p>
+        <p class="text-2xl font-extrabold mt-2">${v}</p>
+      </div>`).join('')}
+  </div>
+
+  <div class="grid lg:grid-cols-2 gap-6 mb-8">
+    <div class="card p-6">
+      <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-triangle-exclamation text-rose-500 mr-2"></i>Absent Today (${absent.length})</h3>
+      <div class="space-y-2 max-h-72 overflow-y-auto scrollbar-thin">
+        ${absent.map(s=>`
+          <div class="flex items-center justify-between p-3 rounded-xl bg-rose-50 dark:bg-rose-900/20 hover:scale-[1.01] transition">
+            <div>
+              <p class="font-semibold text-sm">${esc(s.name)}</p>
+              <p class="text-xs text-slate-500">${esc(s.className)} • Father: ${esc(s.father)}</p>
+            </div>
+            <a href="tel:${esc(s.phone)}" class="btn btn-primary text-xs !py-1.5 !px-3"><i class="fa-solid fa-phone"></i> ${esc(s.phone)}</a>
+          </div>`).join('') || '<p class="text-sm text-slate-400 py-6 text-center">No absents recorded today. 🎉</p>'}
+      </div>
+    </div>
+
+    <div class="card p-6">
+      <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-list-check text-brand-500 mr-2"></i>Teacher Tasks &amp; Activities</h3>
+      <div class="space-y-2 max-h-72 overflow-y-auto scrollbar-thin">
+        ${DB.tasks.slice(-8).reverse().map(t=>{
+          const tch = DB.teachers.find(x=>x.id===t.teacherId);
+          return `<div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+            <div><p class="text-sm font-semibold">${esc(t.text)}</p>
+            <p class="text-xs text-slate-500">${esc(tch?tch.name:'—')} • ${esc(t.date)}</p></div>
+            <span class="text-[10px] font-bold px-2 py-1 rounded-full ${t.status==='Done'?'bg-emerald-100 text-emerald-600':'bg-amber-100 text-amber-600'}">${esc(t.status)}</span>
+          </div>`;
+        }).join('') || '<p class="text-sm text-slate-400 py-6 text-center">No tasks yet.</p>'}
+      </div>
+      <button onclick="adminGo('teachers')" class="btn btn-primary w-full mt-4 text-sm"><i class="fa-solid fa-plus"></i> Assign Task</button>
+    </div>
+  </div>
+
+  <div class="card p-6">
+    <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-chart-simple text-brand-500 mr-2"></i>Class-wise Enrolment</h3>
+    <div class="space-y-3">
+      ${CLASS_LIST.map(c=>{
+        const n = DB.students.filter(s=>s.className===c).length;
+        const pct = DB.students.length ? Math.round(n/DB.students.length*100) : 0;
+        return `<div>
+          <div class="flex justify-between text-xs font-semibold mb-1"><span>${esc(c)}</span><span>${n}</span></div>
+          <div class="h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+            <div class="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-300 transition-all duration-700" style="width:${pct}%"></div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+/* ---------- WEBSITE EDITOR ---------- */
+function adminWebsiteHTML(){
+  const s = DB.settings;
+  return `
+  <div class="card p-6 mb-6">
+    <h3 class="font-extrabold text-lg mb-5"><i class="fa-solid fa-house text-brand-500 mr-2"></i>Hero Section</h3>
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="md:col-span-2"><label class="label">Hero Title</label><input id="w_heroTitle" class="input" value="${esc(s.hero.title)}"/></div>
+      <div class="md:col-span-2"><label class="label">Hero Subtitle</label><textarea id="w_heroSub" rows="2" class="input">${esc(s.hero.subtitle)}</textarea></div>
+      <div class="md:col-span-2"><label class="label">Hero Image URL</label><input id="w_heroImg" class="input" value="${esc(s.hero.image)}"/></div>
+    </div>
+  </div>
+
+  <div class="card p-6 mb-6">
+    <h3 class="font-extrabold text-lg mb-5"><i class="fa-solid fa-circle-info text-brand-500 mr-2"></i>About &amp; Vision</h3>
+    <div class="space-y-4">
+      <div><label class="label">About Us Text</label><textarea id="w_about" rows="5" class="input">${esc(s.about)}</textarea></div>
+      <div><label class="label">Our Vision Text</label><textarea id="w_vision" rows="5" class="input">${esc(s.vision)}</textarea></div>
+      <div><label class="label">Mission Text</label><textarea id="w_mission" rows="2" class="input">${esc(s.mission)}</textarea></div>
+    </div>
+  </div>
+
+  <div class="card p-6 mb-6">
+    <h3 class="font-extrabold text-lg mb-5"><i class="fa-solid fa-user-tie text-brand-500 mr-2"></i>Principal</h3>
+    <div class="grid md:grid-cols-2 gap-4">
+      <div><label class="label">Name</label><input id="w_pName" class="input" value="${esc(s.principal.name)}"/></div>
+      <div><label class="label">WhatsApp Number</label><input id="w_pPhone" class="input" value="${esc(s.principal.phone)}"/></div>
+      <div class="md:col-span-2"><label class="label">Photo URL</label><input id="w_pPic" class="input" value="${esc(s.principal.pic)}"/></div>
+      <div class="md:col-span-2"><label class="label">Message</label><textarea id="w_pMsg" rows="3" class="input">${esc(s.principal.message)}</textarea></div>
+    </div>
+  </div>
+
+  <div class="card p-6 mb-6">
+    <h3 class="font-extrabold text-lg mb-5"><i class="fa-solid fa-address-book text-brand-500 mr-2"></i>Contact Information</h3>
+    <div class="grid md:grid-cols-2 gap-4">
+      <div><label class="label">Phone 1</label><input id="w_cPhone1" class="input" value="${esc(s.contact.phones[0]||'')}"/></div>
+      <div><label class="label">Phone 2</label><input id="w_cPhone2" class="input" value="${esc(s.contact.phones[1]||'')}"/></div>
+      <div><label class="label">Email</label><input id="w_cEmail" class="input" value="${esc(s.contact.email)}"/></div>
+      <div><label class="label">WhatsApp</label><input id="w_cWa" class="input" value="${esc(s.contact.whatsapp)}"/></div>
+      <div class="md:col-span-2"><label class="label">Address</label><input id="w_cAddr" class="input" value="${esc(s.contact.address)}"/></div>
+      <div class="md:col-span-2"><label class="label">Google Maps Link</label><input id="w_cMap" class="input" value="${esc(s.contact.mapUrl)}"/></div>
+    </div>
+  </div>
+
+  <div class="card p-6 mb-6">
+    <h3 class="font-extrabold text-lg mb-5"><i class="fa-solid fa-images text-brand-500 mr-2"></i>Gallery (${s.gallery.length} items)</h3>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+      ${s.gallery.map((g,i)=>`
+        <div class="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 group relative">
+          <img src="${esc(g.img)}" class="w-full h-32 object-cover group-hover:scale-105 transition" alt=""/>
+          <div class="p-3">
+            <p class="text-xs font-bold truncate">${esc(g.title)}</p>
+            <button onclick="removeGalleryItem(${i})" class="text-[11px] text-rose-500 font-semibold mt-1 hover:underline">Remove</button>
+          </div>
+        </div>`).join('')}
+    </div>
+    <div class="grid md:grid-cols-3 gap-3">
+      <input id="g_title" class="input" placeholder="Event title"/>
+      <input id="g_desc" class="input" placeholder="Short description"/>
+      <input id="g_img" class="input" placeholder="Image URL"/>
+    </div>
+    <button onclick="addGalleryItem()" class="btn btn-primary mt-3 text-sm"><i class="fa-solid fa-plus"></i> Add Gallery Image</button>
+  </div>
+
+  <div class="card p-6">
+    <h3 class="font-extrabold text-lg mb-5"><i class="fa-solid fa-floppy-disk text-brand-500 mr-2"></i>Save Changes</h3>
+    <button onclick="saveWebsite()" class="btn btn-primary"><i class="fa-solid fa-check"></i> Save Website Settings</button>
+  </div>`;
+}
+
+function saveWebsite(){
+  const g = id => document.getElementById(id)?.value ?? '';
+  const s = DB.settings;
+  s.hero.title = g('w_heroTitle');
+  s.hero.subtitle = g('w_heroSub');
+  s.hero.image = g('w_heroImg');
+  s.about = g('w_about');
+  s.vision = g('w_vision');
+  s.mission = g('w_mission');
+  s.principal.name = g('w_pName');
+  s.principal.phone = g('w_pPhone');
+  s.principal.pic = g('w_pPic');
+  s.principal.message = g('w_pMsg');
+  s.contact.phones = [g('w_cPhone1'), g('w_cPhone2')].filter(Boolean);
+  s.contact.email = g('w_cEmail');
+  s.contact.whatsapp = g('w_cWa');
+  s.contact.address = g('w_cAddr');
+  s.contact.mapUrl = g('w_cMap');
+  saveDB();
+  renderNav(); renderFooter();
+  alertOk('Saved!', 'Website content updated successfully.');
+}
+
+function addGalleryItem(){
+  const t = document.getElementById('g_title').value.trim();
+  const d = document.getElementById('g_desc').value.trim();
+  const i = document.getElementById('g_img').value.trim() || IMG.g1;
+  if (!t) return alertErr('Missing Title', 'Please enter an event title.');
+  DB.settings.gallery.push({ title:t, desc:d, img:i });
+  saveDB(); renderAdminPanel(); toast('success','Gallery item added');
+}
+function removeGalleryItem(i){
+  DB.settings.gallery.splice(i,1);
+  saveDB(); renderAdminPanel(); toast('success','Item removed');
+}
+
+/* ---------- FINANCE ---------- */
+function adminFinanceHTML(){
+  const feesTotal = DB.fees.reduce((a,f)=>a+Number(f.amount||0),0);
+  const expTotal = DB.expenses.reduce((a,e)=>a+Number(e.amount||0),0);
+  const salTotal = DB.salaries.reduce((a,s)=>a+Number(s.amount||0),0);
+
+  return `
+  <div class="grid sm:grid-cols-3 gap-5 mb-8">
+    ${[['Fees Collected', money(feesTotal),'from-emerald-500 to-emerald-700','fa-hand-holding-dollar'],
+       ['Expenses', money(expTotal),'from-rose-500 to-rose-700','fa-receipt'],
+       ['Salaries Paid', money(salTotal),'from-amber-500 to-amber-700','fa-money-check-dollar']]
+      .map(([l,v,g,ic])=>`
+      <div class="dash-card bg-gradient-to-br ${g}">
+        <i class="fa-solid ${ic} absolute right-5 bottom-4 text-4xl opacity-25"></i>
+        <p class="text-xs uppercase tracking-widest opacity-80">${l}</p>
+        <p class="text-2xl font-extrabold mt-2">${v}</p>
+      </div>`).join('')}
+  </div>
+
+  <!-- ADD FEE -->
+  <div class="card p-6 mb-6">
+    <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-plus text-emerald-500 mr-2"></i>Add Fee Record</h3>
+    <div class="grid md:grid-cols-3 gap-3">
+      <input id="f_student" class="input" placeholder="Student Name"/>
+      <input id="f_father" class="input" placeholder="Father Name"/>
+      <input id="f_contact" class="input" placeholder="Contact Number"/>
+      <select id="f_class" class="input">${CLASS_LIST.map(c=>`<option>${c}</option>`).join('')}</select>
+      <input id="f_amount" type="number" class="input" placeholder="Amount"/>
+      <input id="f_month" type="month" class="input"/>
+    </div>
+    <button onclick="addFee()" class="btn btn-primary mt-3 text-sm"><i class="fa-solid fa-plus"></i> Add Fee</button>
+  </div>
+
+  <!-- ADD EXPENSE -->
+  <div class="card p-6 mb-6">
+    <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-receipt text-rose-500 mr-2"></i>Add Expense</h3>
+    <div class="grid md:grid-cols-4 gap-3">
+      <input id="e_title" class="input" placeholder="Expense title"/>
+      <select id="e_cat" class="input">
+        <option>Bills</option><option>Rent</option><option>Salary</option>
+        <option>Stationery</option><option>Maintenance</option><option>Other</option>
+      </select>
+      <input id="e_amount" type="number" class="input" placeholder="Amount"/>
+      <input id="e_date" type="date" class="input" value="${today()}"/>
+    </div>
+    <button onclick="addExpense()" class="btn btn-primary mt-3 text-sm"><i class="fa-solid fa-plus"></i> Add Expense</button>
+  </div>
+
+  <!-- ADD SALARY -->
+  <div class="card p-6 mb-6">
+    <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-money-check-dollar text-amber-500 mr-2"></i>Add Salary Payment</h3>
+    <div class="grid md:grid-cols-5 gap-3">
+      <select id="s_type" class="input"><option>Teacher</option><option>Staff</option></select>
+      <input id="s_name" class="input" placeholder="Employee name"/>
+      <input id="s_amount" type="number" class="input" placeholder="Amount"/>
+      <input id="s_month" type="month" class="input"/>
+      <select id="s_status" class="input"><option>Paid</option><option>Pending</option></select>
+    </div>
+    <button onclick="addSalary()" class="btn btn-primary mt-3 text-sm"><i class="fa-solid fa-plus"></i> Add Salary</button>
+  </div>
+
+  <!-- RECORDS -->
+  <div class="card p-6 mb-6">
+    <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-list text-emerald-500 mr-2"></i>Fee Records (${DB.fees.length})</h3>
+    <div class="overflow-x-auto scrollbar-thin">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-100 dark:bg-slate-800 text-left">
+          <tr><th class="p-3">Student</th><th class="p-3">Father</th><th class="p-3">Contact</th><th class="p-3">Class</th><th class="p-3">Amount</th><th class="p-3">Month</th><th class="p-3">Action</th></tr>
+        </thead>
+        <tbody>
+          ${DB.fees.map(f=>`<tr class="border-t border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+            <td class="p-3 font-semibold">${esc(f.student)}</td><td class="p-3">${esc(f.father)}</td>
+            <td class="p-3">${esc(f.contact)}</td><td class="p-3">${esc(f.className)}</td>
+            <td class="p-3 font-bold text-emerald-600">${money(f.amount)}</td><td class="p-3">${esc(f.month)}</td>
+            <td class="p-3"><button onclick="delRecord('fees','${f.id}')" class="text-rose-500 hover:scale-125 transition"><i class="fa-solid fa-trash"></i></button></td>
+          </tr>`).join('') || '<tr><td colspan="7" class="p-6 text-center text-slate-400">No fee records.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid lg:grid-cols-2 gap-6">
+    <div class="card p-6">
+      <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-receipt text-rose-500 mr-2"></i>Expenses</h3>
+      <div class="space-y-2 max-h-80 overflow-y-auto scrollbar-thin">
+        ${DB.expenses.map(e=>`<div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:translate-x-1 transition">
+          <div><p class="text-sm font-semibold">${esc(e.title)}</p><p class="text-xs text-slate-500">${esc(e.category)} • ${esc(e.date)}</p></div>
+          <div class="flex items-center gap-3"><span class="font-bold text-rose-500 text-sm">${money(e.amount)}</span>
+          <button onclick="delRecord('expenses','${e.id}')" class="text-rose-400 hover:scale-125 transition"><i class="fa-solid fa-trash text-xs"></i></button></div>
+        </div>`).join('') || '<p class="text-sm text-slate-400 text-center py-6">No expenses.</p>'}
+      </div>
+    </div>
+    <div class="card p-6">
+      <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-money-check-dollar text-amber-500 mr-2"></i>Salaries</h3>
+      <div class="space-y-2 max-h-80 overflow-y-auto scrollbar-thin">
+        ${DB.salaries.map(s=>`<div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:translate-x-1 transition">
+          <div><p class="text-sm font-semibold">${esc(s.name)}</p><p class="text-xs text-slate-500">${esc(s.personType)} • ${esc(s.month)}</p></div>
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] font-bold px-2 py-1 rounded-full ${s.status==='Paid'?'bg-emerald-100 text-emerald-600':'bg-amber-100 text-amber-600'}">${esc(s.status)}</span>
+            <span class="font-bold text-sm">${money(s.amount)}</span>
+            <button onclick="delRecord('salaries','${s.id}')" class="text-rose-400 hover:scale-125 transition"><i class="fa-solid fa-trash text-xs"></i></button>
+          </div>
+        </div>`).join('') || '<p class="text-sm text-slate-400 text-center py-6">No salary records.</p>'}
+      </div>
+    </div>
+  </div>`;
+}
+
+function delRecord(table, id){
+  Swal.fire({ title:'Delete this record?', icon:'warning', showCancelButton:true,
+    confirmButtonColor:'#e11d48', confirmButtonText:'Delete',
+    background: document.documentElement.classList.contains('dark') ? '#0f172a' : '#fff',
+    color: document.documentElement.classList.contains('dark') ? '#e2e8f0' : '#0f172a'
+  }).then(r=>{
+    if (r.isConfirmed){ DB[table] = DB[table].filter(x=>x.id!==id); saveDB(); renderAdminPanel(); toast('success','Record deleted'); }
+  });
+}
+
+function addFee(){
+  const g = id => document.getElementById(id).value;
+  if (!g('f_student') || !g('f_amount')) return alertErr('Missing Fields','Student name and amount are required.');
+  DB.fees.push({ id:uid('fee'), student:g('f_student'), father:g('f_father'), contact:g('f_contact'),
+    className:g('f_class'), amount:Number(g('f_amount')), month:g('f_month')||today().slice(0,7), date:today() });
+  saveDB(); renderAdminPanel(); alertOk('Fee Added','Record saved successfully.');
+}
+
+function addExpense(){
+  const g = id => document.getElementById(id).value;
+  if (!g('e_title') || !g('e_amount')) return alertErr('Missing Fields','Title and amount are required.');
+  DB.expenses.push({ id:uid('exp'), title:g('e_title'), category:g('e_cat'), amount:Number(g('e_amount')), date:g('e_date')||today() });
+  saveDB(); renderAdminPanel(); alertOk('Expense Added','Record saved successfully.');
+}
+
+function addSalary(){
+  const g = id => document.getElementById(id).value;
+  if (!g('s_name') || !g('s_amount')) return alertErr('Missing Fields','Name and amount are required.');
+  DB.salaries.push({ id:uid('sal'), personType:g('s_type'), name:g('s_name'), amount:Number(g('s_amount')),
+    month:g('s_month')||today().slice(0,7), date:today(), status:g('s_status') });
+  saveDB(); renderAdminPanel(); alertOk('Salary Added','Record saved successfully.');
+}
+
+/* ---------- TEACHERS ---------- */
+function adminTeachersHTML(){
+  return `
+  <div class="card p-6 mb-6">
+    <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-user-plus text-brand-500 mr-2"></i>Add New Teacher</h3>
+    <div class="grid md:grid-cols-3 gap-3">
+      <input id="t_name" class="input" placeholder="Full Name"/>
+      <input id="t_edu" class="input" placeholder="Education (e.g. M.Sc)"/>
+      <input id="t_subject" class="input" placeholder="Subject"/>
+      <input id="t_contact" class="input" placeholder="Contact Number"/>
+      <input id="t_email" class="input" placeholder="Email"/>
+      <input id="t_timing" class="input" placeholder="Timing (08:00 - 02:00)"/>
+      <input id="t_salary" type="number" class="input" placeholder="Salary"/>
+      <input id="t_bank" class="input" placeholder="Bank Details"/>
+      <input id="t_pass" class="input" placeholder="Login Password"/>
+      <input id="t_pic" class="input md:col-span-2" placeholder="Profile Picture URL"/>
+      <input id="t_resume" class="input" placeholder="Resume URL"/>
+      <select id="t_class" class="input">${CLASS_LIST.map(c=>`<option>${c}</option>`).join('')}</select>
+    </div>
+    <button onclick="addTeacher()" class="btn btn-primary mt-3 text-sm"><i class="fa-solid fa-plus"></i> Add Teacher</button>
+  </div>
+
+  <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
+    ${DB.teachers.map(t=>`
+      <div class="card p-5 group">
+        <div class="flex items-center gap-4">
+          <img src="${esc(t.pic||IMG.avatar)}" class="w-16 h-16 rounded-2xl object-cover group-hover:scale-105 transition" alt=""/>
+          <div class="min-w-0">
+            <p class="font-bold truncate">${esc(t.name)}</p>
+            <p class="text-xs text-brand-500">${esc(t.subject)}</p>
+            <p class="text-[11px] text-slate-400 truncate">${esc(t.contact)}</p>
+          </div>
+        </div>
+        <div class="flex gap-2 mt-4">
+          <button onclick="openAttendanceTeacher('${t.id}')" class="btn btn-primary text-xs flex-1 !py-2"><i class="fa-solid fa-calendar-check"></i> Attendance</button>
+          <button onclick="delTeacher('${t.id}')" class="btn text-xs !py-2 !px-3 bg-rose-100 text-rose-600 hover:bg-rose-200"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      </div>`).join('')}
+  </div>
+
+  <div class="card p-6 mb-6">
+    <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-calendar-check text-brand-500 mr-2"></i>Teacher Attendance — ${today()}</h3>
+    <div class="space-y-2">
+      ${DB.teachers.map(t=>{
+        const st = (DB.attendance.teachers[today()]||{})[t.id] || '—';
+        return `<div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+          <div class="flex items-center gap-3">
+            <img src="${esc(t.pic||IMG.avatar)}" class="w-9 h-9 rounded-lg object-cover" alt=""/>
+            <div><p class="text-sm font-semibold">${esc(t.name)}</p><p class="text-xs text-slate-500">${esc(t.subject)}</p></div>
+          </div>
+          <div class="flex gap-1.5">
+            ${['Present','Absent','Leave'].map(s=>`
+              <button onclick="markTeacherAtt('${t.id}','${s}')" class="text-[11px] font-bold px-3 py-1.5 rounded-lg transition ${st===s?'bg-brand-600 text-white scale-105':'bg-white dark:bg-slate-700 hover:bg-brand-100 dark:hover:bg-slate-600'}">${s}</button>`).join('')}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>
+
+  <div class="card p-6">
+    <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-list-check text-brand-500 mr-2"></i>Assign Task to Teacher</h3>
+    <div class="grid md:grid-cols-3 gap-3">
+      <select id="task_teacher" class="input">${DB.teachers.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('')}</select>
+      <input id="task_text" class="input md:col-span-2" placeholder="Task description"/>
+    </div>
+    <button onclick="addTask()" class="btn btn-primary mt-3 text-sm"><i class="fa-solid fa-paper-plane"></i> Assign Task</button>
+    <div class="space-y-2 mt-5 max-h-64 overflow-y-auto scrollbar-thin">
+      ${DB.tasks.slice().reverse().map(t=>{
+        const tch = DB.teachers.find(x=>x.id===t.teacherId);
+        return `<div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+          <div><p class="text-sm font-semibold">${esc(t.text)}</p><p class="text-xs text-slate-500">${esc(tch?tch.name:'—')} • ${esc(t.date)}</p></div>
+          <span class="text-[10px] font-bold px-2 py-1 rounded-full ${t.status==='Done'?'bg-emerald-100 text-emerald-600':'bg-amber-100 text-amber-600'}">${esc(t.status)}</span>
+        </div>`;
+      }).join('') || '<p class="text-sm text-slate-400 text-center py-6">No tasks assigned.</p>'}
+    </div>
+  </div>`;
+}
+
+function addTeacher(){
+  const g = id => document.getElementById(id).value.trim();
+  if (!g('t_name') || !g('t_pass')) return alertErr('Missing Fields','Name and password are required.');
+  DB.teachers.push({
+    id: uid('tch'), name:g('t_name'), pic:g('t_pic')||IMG.avatar, education:g('t_edu'), subject:g('t_subject'),
+    contact:g('t_contact'), email:g('t_email'), timing:g('t_timing'), resume:g('t_resume'),
+    salary:Number(g('t_salary')||0), bank:g('t_bank'), password:g('t_pass'),
+    classes:[g('t_class')], classTeacherOf:g('t_class')
+  });
+  saveDB(); renderAdminPanel(); alertOk('Teacher Added','The teacher can now log in.');
+}
+
+function delTeacher(id){
+  Swal.fire({ title:'Remove this teacher?', icon:'warning', showCancelButton:true, confirmButtonColor:'#e11d48',
+    background: document.documentElement.classList.contains('dark') ? '#0f172a' : '#fff',
+    color: document.documentElement.classList.contains('dark') ? '#e2e8f0' : '#0f172a' })
+  .then(r=>{ if (r.isConfirmed){ DB.teachers = DB.teachers.filter(t=>t.id!==id); saveDB(); renderAdminPanel(); toast('success','Teacher removed'); } });
+}
+
+function markTeacherAtt(id, status){
+  DB.attendance.teachers[today()] = DB.attendance.teachers[today()] || {};
+  DB.attendance.teachers[today()][id] = status;
+  saveDB(); renderAdminPanel(); toast('success', 'Attendance marked: ' + status);
+}
+
+function openAttendanceTeacher(id){ adminTab='teachers'; renderAdminPanel(); }
+
+function addTask(){
+  const tId = document.getElementById('task_teacher').value;
+  const txt = document.getElementById('task_text').value.trim();
+  if (!txt) return alertErr('Missing','Enter a task description.');
+  DB.tasks.push({ id:uid('tsk'), teacherId:tId, text:txt, date:today(), status:'Pending' });
+  saveDB(); renderAdminPanel(); alertOk('Task Assigned','The teacher will see it in their dashboard.');
+}
+
+/* ---------- STUDENTS ---------- */
+function adminStudentsHTML(){
+  return `
+  <div class="card p-6 mb-6">
+    <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-user-plus text-brand-500 mr-2"></i>Add New Student</h3>
+    <div class="grid md:grid-cols-3 gap-3">
+      <input id="st_name" class="input" placeholder="Student Name"/>
+      <input id="st_father" class="input" placeholder="Father Name"/>
+      <select id="st_class" class="input">${CLASS_LIST.map(c=>`<option>${c}</option>`).join('')}</select>
+      <input id="st_phone" class="input" placeholder="Phone"/>
+      <input id="st_fees" type="number" class="input" placeholder="Monthly Fees"/>
+      <input id="st_photo" class="input" placeholder="Photo URL (optional)"/>
+    </div>
+    <button onclick="addStudent()" class="btn btn-primary mt-3 text-sm"><i class="fa-solid fa-plus"></i> Add Student</button>
+  </div>
+
+  <div class="card p-6 mb-6">
+    <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-users text-brand-500 mr-2"></i>All Students (${DB.students.length})</h3>
+    <div class="overflow-x-auto scrollbar-thin">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-100 dark:bg-slate-800 text-left">
+          <tr><th class="p-3">Photo</th><th class="p-3">Name</th><th class="p-3">Father</th><th class="p-3">Class</th><th class="p-3">Phone</th><th class="p-3">Fees</th><th class="p-3">Action</th></tr>
+        </thead>
+        <tbody>
+          ${DB.students.map(s=>`<tr class="border-t border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+            <td class="p-3"><img src="${esc(s.photo||IMG.avatar)}" class="w-9 h-9 rounded-lg object-cover" alt=""/></td>
+            <td class="p-3 font-semibold">${esc(s.name)}</td><td class="p-3">${esc(s.father)}</td>
+            <td class="p-3">${esc(s.className)}</td><td class="p-3">${esc(s.phone)}</td>
+            <td class="p-3">${money(s.fees)}</td>
+            <td class="p-3 flex gap-2">
+              <a href="${waLink(s.phone,'Assalam o Alaikum, regarding ' + s.name)}" target="_blank" class="text-emerald-500 hover:scale-125 transition"><i class="fa-brands fa-whatsapp"></i></a>
+              <button onclick="delStudent('${s.id}')" class="text-rose-500 hover:scale-125 transition"><i class="fa-solid fa-trash"></i></button>
+            </td>
+          </tr>`).join('') || '<tr><td colspan="7" class="p-6 text-center text-slate-400">No students.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card p-6">
+    <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-calendar-check text-brand-500 mr-2"></i>Student Attendance — ${today()}</h3>
+    <div class="grid md:grid-cols-2 gap-2 max-h-96 overflow-y-auto scrollbar-thin">
+      ${DB.students.map(s=>{
+        const st = (DB.attendance.students[today()]||{})[s.id] || '—';
+        return `<div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+          <div><p class="text-sm font-semibold">${esc(s.name)}</p><p class="text-xs text-slate-500">${esc(s.className)}</p></div>
+          <div class="flex gap-1">
+            ${['Present','Absent','Leave'].map(x=>`
+              <button onclick="markStudentAtt('${s.id}','${x}')" class="text-[10px] font-bold px-2.5 py-1 rounded-lg transition ${st===x?'bg-brand-600 text-white':'bg-white dark:bg-slate-700 hover:bg-brand-100'}">${x}</button>`).join('')}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+function addStudent(){
+  const g = id => document.getElementById(id).value.trim();
+  if (!g('st_name')) return alertErr('Missing','Student name is required.');
+  DB.students.push({ id:uid('std'), name:g('st_name'), father:g('st_father'), className:g('st_class'),
+    phone:g('st_phone'), photo:g('st_photo'), fees:Number(g('st_fees')||0), bform:'', address:'' });
+  saveDB(); renderAdminPanel(); alertOk('Student Added','Student enrolled successfully.');
+}
+
+function delStudent(id){
+  Swal.fire({ title:'Remove this student?', icon:'warning', showCancelButton:true, confirmButtonColor:'#e11d48',
+    background: document.documentElement.classList.contains('dark') ? '#0f172a' : '#fff',
+    color: document.documentElement.classList.contains('dark') ? '#e2e8f0' : '#0f172a' })
+  .then(r=>{ if (r.isConfirmed){ DB.students = DB.students.filter(s=>s.id!==id); saveDB(); renderAdminPanel(); toast('success','Student removed'); } });
+}
+
+function markStudentAtt(id, status){
+  DB.attendance.students[today()] = DB.attendance.students[today()] || {};
+  DB.attendance.students[today()][id] = status;
+  saveDB(); renderAdminPanel(); toast('success','Attendance: ' + status);
+}
+
+/* ---------- ACADEMICS ---------- */
+function adminAcademicsHTML(){
+  return `
+  <div class="card p-6 mb-6">
+    <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-file-arrow-up text-brand-500 mr-2"></i>Upload Note / Test</h3>
+    <div class="grid md:grid-cols-4 gap-3">
+      <select id="n_class" class="input">${CLASS_LIST.map(c=>`<option>${c}</option>`).join('')}</select>
+      <input id="n_subject" class="input" placeholder="Subject"/>
+      <input id="n_title" class="input" placeholder="Title"/>
+      <select id="n_type" class="input"><option>Note</option><option>Test</option></select>
+      <input id="n_content" class="input md:col-span-4" placeholder="File / Image URL"/>
+    </div>
+    <button onclick="addNote()" class="btn btn-primary mt-3 text-sm"><i class="fa-solid fa-upload"></i> Upload</button>
+  </div>
+
+  <div class="grid lg:grid-cols-2 gap-6">
+    <div class="card p-6">
+      <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-book text-brand-500 mr-2"></i>Notes &amp; Tests (${DB.notes.length})</h3>
+      <div class="space-y-2 max-h-96 overflow-y-auto scrollbar-thin">
+        ${DB.notes.slice().reverse().map(n=>`
+          <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+            <div class="min-w-0"><p class="text-sm font-semibold truncate">${esc(n.title)}</p>
+            <p class="text-xs text-slate-500">${esc(n.className)} • ${esc(n.subject)} • ${esc(n.type)}</p></div>
+            <button onclick="delRecord('notes','${n.id}')" class="text-rose-400 hover:scale-125 transition"><i class="fa-solid fa-trash text-xs"></i></button>
+          </div>`).join('') || '<p class="text-sm text-slate-400 text-center py-6">No notes uploaded.</p>'}
+      </div>
+    </div>
+
+    <div class="card p-6">
+      <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-chart-line text-brand-500 mr-2"></i>Student Results</h3>
+      <div class="space-y-2 max-h-96 overflow-y-auto scrollbar-thin">
+        ${DB.marks.slice().reverse().map(m=>`
+          <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+            <div><p class="text-sm font-semibold">${esc(m.studentName)}</p>
+            <p class="text-xs text-slate-500">${esc(m.className)} • ${esc(m.subject)} • ${esc(m.exam)}</p></div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-brand-600 dark:text-brand-300 text-sm">${m.obtained}/${m.total}</span>
+              <button onclick="delRecord('marks','${m.id}')" class="text-rose-400 hover:scale-125 transition"><i class="fa-solid fa-trash text-xs"></i></button>
+            </div>
+          </div>`).join('') || '<p class="text-sm text-slate-400 text-center py-6">No results yet.</p>'}
+      </div>
+    </div>
+  </div>`;
+}
+
+function addNote(){
+  const g = id => document.getElementById(id).value.trim();
+  if (!g('n_title')) return alertErr('Missing','Title is required.');
+  DB.notes.push({ id:uid('note'), className:g('n_class'), subject:g('n_subject'), title:g('n_title'),
+    type:g('n_type'), content:g('n_content'), teacherId:'admin', date:today() });
+  saveDB(); renderAdminPanel(); alertOk('Uploaded','Material is now visible to students.');
+}
+
+/* ---------- ANNOUNCEMENTS ---------- */
+function adminAnnouncementsHTML(){
+  return `
+  <div class="card p-6 mb-6">
+    <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-bullhorn text-brand-500 mr-2"></i>Post Announcement</h3>
+    <textarea id="a_text" rows="3" class="input" placeholder="Write your announcement..."></textarea>
+    <div class="grid md:grid-cols-2 gap-3 mt-3">
+      <select id="a_target" class="input">
+        <option>All</option><option>Admin</option><option>Teacher</option><option>Students</option><option>Parents</option>
+      </select>
+      <button onclick="addAnnouncement()" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i> Post</button>
+    </div>
+  </div>
+
+  <div class="card p-6">
+    <h3 class="font-extrabold text-lg mb-4">All Announcements (${DB.announcements.length})</h3>
+    <div class="space-y-3">
+      ${DB.announcements.slice().reverse().map(a=>`
+        <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border-l-4 border-brand-500 hover:translate-x-1 transition">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-100 text-brand-700 dark:bg-brand-900 dark:text-brand-300">${esc(a.target)}</span>
+            <button onclick="delRecord('announcements','${a.id}')" class="text-rose-400 hover:scale-125 transition"><i class="fa-solid fa-trash text-xs"></i></button>
+          </div>
+          <p class="text-sm">${esc(a.text)}</p>
+          <p class="text-[11px] text-slate-400 mt-1">${esc(a.date)} • by ${esc(a.by||'Admin')}</p>
+        </div>`).join('') || '<p class="text-sm text-slate-400 text-center py-6">No announcements.</p>'}
+    </div>
+  </div>`;
+}
+
+function addAnnouncement(){
+  const txt = document.getElementById('a_text').value.trim();
+  if (!txt) return alertErr('Missing','Write something first.');
+  DB.announcements.push({ id:uid('ann'), text:txt, target:document.getElementById('a_target').value, date:today(), by:'Admin' });
+  saveDB(); renderAdminPanel(); alertOk('Posted','Announcement is live.');
+}
+
+/* ---------- SETTINGS ---------- */
+function adminSettingsHTML(){
+  return `
+  <div class="card p-6 mb-6">
+    <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-key text-brand-500 mr-2"></i>Change Admin Password</h3>
+    <div class="grid md:grid-cols-2 gap-3">
+      <input id="set_old" type="password" class="input" placeholder="Current password"/>
+      <input id="set_new" type="password" class="input" placeholder="New password"/>
+    </div>
+    <button onclick="changeAdminPass()" class="btn btn-primary mt-3 text-sm"><i class="fa-solid fa-floppy-disk"></i> Update Password</button>
+  </div>
+
+  <div class="card p-6 mb-6">
+    <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-school text-brand-500 mr-2"></i>School Identity</h3>
+    <div class="grid md:grid-cols-2 gap-3">
+      <input id="set_name" class="input" value="${esc(DB.settings.schoolName)}" placeholder="School Name"/>
+      <input id="set_loc" class="input" value="${esc(DB.settings.location)}" placeholder="Location"/>
+      <input id="set_tag" class="input md:col-span-2" value="${esc(DB.settings.tagline)}" placeholder="Tagline"/>
+    </div>
+    <button onclick="saveIdentity()" class="btn btn-primary mt-3 text-sm"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+  </div>
+
+  <div class="card p-6">
+    <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-cloud text-brand-500 mr-2"></i>Database</h3>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mb-3">All data is stored as a single JSON record in the Supabase <code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800">record</code> table (column <code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800">record</code>) with a local backup.</p>
+    <div class="flex flex-wrap gap-3">
+      <button onclick="pushRemote().then(()=>alertOk('Synced','Data pushed to Supabase.'))" class="btn btn-primary text-sm"><i class="fa-solid fa-cloud-arrow-up"></i> Force Cloud Sync</button>
+      <button onclick="exportDB()" class="btn btn-primary text-sm !bg-slate-600"><i class="fa-solid fa-download"></i> Export JSON</button>
+      <button onclick="resetDB()" class="btn text-sm bg-rose-100 text-rose-600 hover:bg-rose-200"><i class="fa-solid fa-rotate-left"></i> Reset Database</button>
+    </div>
+  </div>`;
+}
+
+function changeAdminPass(){
+  const o = document.getElementById('set_old').value;
+  const n = document.getElementById('set_new').value;
+  if (o !== DB.settings.adminPassword) return alertErr('Incorrect','Current password is wrong.');
+  if (n.length < 4) return alertErr('Too Short','Password must be at least 4 characters.');
+  DB.settings.adminPassword = n; saveDB(); alertOk('Updated','Admin password changed.');
+}
+
+function saveIdentity(){
+  DB.settings.schoolName = document.getElementById('set_name').value;
+  DB.settings.location = document.getElementById('set_loc').value;
+  DB.settings.tagline = document.getElementById('set_tag').value;
+  saveDB(); renderNav(); renderFooter(); alertOk('Saved','School identity updated.');
+}
+
+function exportDB(){
+  const blob = new Blob([JSON.stringify(DB, null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'inspire-school-db.json'; a.click();
+  toast('success','Database exported');
+}
+
+function resetDB(){
+  Swal.fire({ title:'Reset everything?', text:'This will erase all records and restore defaults.',
+    icon:'warning', showCancelButton:true, confirmButtonColor:'#e11d48', confirmButtonText:'Yes, reset',
+    background: document.documentElement.classList.contains('dark') ? '#0f172a' : '#fff',
+    color: document.documentElement.classList.contains('dark') ? '#e2e8f0' : '#0f172a' })
+  .then(r=>{ if (r.isConfirmed){ DB = JSON.parse(JSON.stringify(DEFAULT_DB)); saveDB(); renderAdminPanel(); toast('success','Database reset'); } });
+}
+
+/* =========================================================
+   TEACHER PANEL
+   ========================================================= */
+function renderTeacherPanel(sess){
+  const t = DB.teachers.find(x=>x.id===sess.id);
+  if (!t) return logoutPortal();
+  const nav = [
+    { id:'dashboard', label:'Dashboard', icon:'fa-gauge-high', fn:"teacherGo('dashboard')" },
+    { id:'class', label:'Class Management', icon:'fa-users', fn:"teacherGo('class')" },
+    { id:'attendance', label:'Attendance', icon:'fa-calendar-check', fn:"teacherGo('attendance')" },
+    { id:'academics', label:'Academics', icon:'fa-book', fn:"teacherGo('academics')" },
+    { id:'activities', label:'Activities', icon:'fa-images', fn:"teacherGo('activities')" }
+  ];
+  const content = {
+    dashboard: teacherDashboardHTML,
+    class: teacherClassHTML,
+    attendance: teacherAttendanceHTML,
+    academics: teacherAcademicsHTML,
+    activities: teacherActivitiesHTML
+  }[teacherTab] || teacherDashboardHTML;
+
+  document.getElementById('portalRoot').innerHTML =
+    portalShell('Teacher Panel', t.name, nav, teacherTab, content(t));
+  setSyncBadge(syncState);
+  if (window.AOS) AOS.refreshHard();
+}
+
+function teacherGo(tab){ teacherTab = tab; renderTeacherPanel(getSession()); }
+
+function teacherDashboardHTML(t){
+  const sal = DB.salaries.filter(s=>s.name===t.name).slice(-1)[0];
+  const myTasks = DB.tasks.filter(x=>x.teacherId===t.id);
+  const myStudents = DB.students.filter(s => (t.classes||[]).includes(s.className) || s.className === t.classTeacherOf);
+  return `
+  <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+    ${[['My Students', myStudents.length,'fa-users','from-brand-500 to-brand-700'],
+       ['My Classes', (t.classes||[]).length,'fa-layer-group','from-violet-500 to-violet-700'],
+       ['Salary Status', sal ? sal.status : 'N/A','fa-money-check-dollar','from-emerald-500 to-emerald-700'],
+       ['Pending Tasks', myTasks.filter(x=>x.status!=='Done').length,'fa-list-check','from-amber-500 to-amber-700']]
+      .map(([l,v,ic,g])=>`
+      <div class="dash-card bg-gradient-to-br ${g}">
+        <i class="fa-solid ${ic} absolute right-5 bottom-4 text-4xl opacity-25"></i>
+        <p class="text-xs uppercase tracking-widest opacity-80">${l}</p>
+        <p class="text-2xl font-extrabold mt-2">${v}</p>
+      </div>`).join('')}
+  </div>
+
+  <div class="grid lg:grid-cols-2 gap-6">
+    <div class="card p-6">
+      <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-id-card text-brand-500 mr-2"></i>My Profile</h3>
+      <div class="flex items-center gap-4 mb-4">
+        <img src="${esc(t.pic||IMG.avatar)}" class="w-20 h-20 rounded-2xl object-cover" alt=""/>
+        <div><p class="font-extrabold text-lg">${esc(t.name)}</p><p class="text-sm text-brand-500">${esc(t.subject)}</p></div>
+      </div>
+      <div class="space-y-2 text-sm">
+        ${[['Education',t.education],['Timing',t.timing],['Contact',t.contact],['Email',t.email],['Salary',money(t.salary)],['Bank',t.bank],['Class Teacher Of',t.classTeacherOf||'—']]
+          .map(([l,v])=>`<div class="flex justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60"><span class="text-slate-500">${l}</span><span class="font-semibold text-right">${esc(v||'—')}</span></div>`).join('')}
+      </div>
+    </div>
+
+    <div class="card p-6">
+      <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-list-check text-brand-500 mr-2"></i>My Tasks</h3>
+      <div class="space-y-2 max-h-96 overflow-y-auto scrollbar-thin">
+        ${myTasks.slice().reverse().map(x=>`
+          <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+            <p class="text-sm font-semibold">${esc(x.text)}</p>
+            <button onclick="toggleTask('${x.id}')" class="text-[10px] font-bold px-2.5 py-1 rounded-full ${x.status==='Done'?'bg-emerald-100 text-emerald-600':'bg-amber-100 text-amber-600'}">${esc(x.status)}</button>
+          </div>`).join('') || '<p class="text-sm text-slate-400 text-center py-6">No tasks assigned.</p>'}
+      </div>
+    </div>
+  </div>
+
+  <div class="card p-6 mt-6">
+    <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-bullhorn text-brand-500 mr-2"></i>Announcements</h3>
+    <div class="space-y-3 max-h-72 overflow-y-auto scrollbar-thin">
+      ${DB.announcements.filter(a=>a.target==='All'||a.target==='Teacher').slice().reverse().map(a=>`
+        <div class="p-4 rounded-xl bg-brand-50 dark:bg-slate-800/60 border-l-4 border-brand-500">
+          <p class="text-sm">${esc(a.text)}</p>
+          <p class="text-[11px] text-slate-400 mt-1">${esc(a.date)}</p>
+        </div>`).join('') || '<p class="text-sm text-slate-400 text-center py-6">No announcements.</p>'}
+    </div>
+  </div>`;
+}
+
+function toggleTask(id){
+  const t = DB.tasks.find(x=>x.id===id);
+  if (t){ t.status = t.status === 'Done' ? 'Pending' : 'Done'; saveDB(); renderTeacherPanel(getSession()); toast('success','Task updated'); }
+}
+
+function teacherClassHTML(t){
+  const myClasses = t.classes && t.classes.length ? t.classes : [CLASS_LIST[0]];
+  return `
+  <div class="card p-6 mb-6">
+    <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-user-plus text-brand-500 mr-2"></i>Add Student to My Class</h3>
+    <div class="grid md:grid-cols-3 gap-3">
+      <input id="tc_name" class="input" placeholder="Student Name"/>
+      <input id="tc_father" class="input" placeholder="Father Name"/>
+      <select id="tc_class" class="input">${myClasses.map(c=>`<option>${c}</option>`).join('')}</select>
+      <input id="tc_phone" class="input" placeholder="Phone"/>
+      <input id="tc_fees" type="number" class="input" placeholder="Monthly Fees"/>
+      <input id="tc_photo" class="input" placeholder="Photo URL"/>
+    </div>
+    <button onclick="teacherAddStudent()" class="btn btn-primary mt-3 text-sm"><i class="fa-solid fa-plus"></i> Add Student</button>
+  </div>
+
+  ${myClasses.map(c=>{
+    const list = DB.students.filter(s=>s.className===c);
+    return `<div class="card p-6 mb-5">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-extrabold text-lg"><i class="fa-solid fa-users text-brand-500 mr-2"></i>${esc(c)} <span class="text-sm text-slate-400">(${list.length})</span></h3>
+      </div>
+      <div class="overflow-x-auto scrollbar-thin">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-100 dark:bg-slate-800 text-left"><tr>
+            <th class="p-3">Photo</th><th class="p-3">Name</th><th class="p-3">Father</th><th class="p-3">Phone</th><th class="p-3">Fees</th><th class="p-3">Action</th></tr></thead>
+          <tbody>
+            ${list.map(s=>`<tr class="border-t border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+              <td class="p-3"><img src="${esc(s.photo||IMG.avatar)}" class="w-9 h-9 rounded-lg object-cover" alt=""/></td>
+              <td class="p-3 font-semibold">${esc(s.name)}</td><td class="p-3">${esc(s.father)}</td>
+              <td class="p-3">${esc(s.phone)}</td><td class="p-3">${money(s.fees)}</td>
+              <td class="p-3"><button onclick="delStudent('${s.id}')" class="text-rose-500 hover:scale-125 transition"><i class="fa-solid fa-trash"></i></button></td>
+            </tr>`).join('') || '<tr><td colspan="6" class="p-6 text-center text-slate-400">No students in this class.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }).join('')}`;
+}
+
+function teacherAddStudent(){
+  const g = id => document.getElementById(id).value.trim();
+  if (!g('tc_name')) return alertErr('Missing','Student name is required.');
+  DB.students.push({ id:uid('std'), name:g('tc_name'), father:g('tc_father'), className:g('tc_class'),
+    phone:g('tc_phone'), photo:g('tc_photo'), fees:Number(g('tc_fees')||0), bform:'', address:'' });
+  saveDB(); renderTeacherPanel(getSession()); alertOk('Student Added','Student enrolled successfully.');
+}
+
+function teacherAttendanceHTML(t){
+  const myClasses = t.classes && t.classes.length ? t.classes : [CLASS_LIST[0]];
+  const list = DB.students.filter(s=>myClasses.includes(s.className));
+  return `
+  <div class="card p-6">
+    <h3 class="font-extrabold text-lg mb-1"><i class="fa-solid fa-calendar-check text-brand-500 mr-2"></i>Mark Student Attendance</h3>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mb-5">Date: ${today()} — synced to the admin dashboard in real time.</p>
+    <div class="grid md:grid-cols-2 gap-2 max-h-[500px] overflow-y-auto scrollbar-thin">
+      ${list.map(s=>{
+        const st = (DB.attendance.students[today()]||{})[s.id] || '—';
+        return `<div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+          <div><p class="text-sm font-semibold">${esc(s.name)}</p><p class="text-xs text-slate-500">${esc(s.className)} • ${esc(s.father)}</p></div>
+          <div class="flex gap-1">
+            ${['Present','Absent','Leave'].map(x=>`
+              <button onclick="markStudentAtt('${s.id}','${x}')" class="text-[10px] font-bold px-2.5 py-1 rounded-lg transition ${st===x?'bg-brand-600 text-white':'bg-white dark:bg-slate-700 hover:bg-brand-100'}">${x}</button>`).join('')}
+          </div>
+        </div>`;
+      }).join('') || '<p class="text-sm text-slate-400 text-center py-8 col-span-full">No students in your classes.</p>'}
+    </div>
+  </div>`;
+}
+
+function teacherAcademicsHTML(t){
+  const myClasses = t.classes && t.classes.length ? t.classes : [CLASS_LIST[0]];
+  return `
+  <div class="card p-6 mb-6">
+    <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-file-arrow-up text-brand-500 mr-2"></i>Upload Note / Test</h3>
+    <div class="grid md:grid-cols-4 gap-3">
+      <select id="tn_class" class="input">${myClasses.map(c=>`<option>${c}</option>`).join('')}</select>
+      <input id="tn_subject" class="input" placeholder="Subject" value="${esc(t.subject)}"/>
+      <input id="tn_title" class="input" placeholder="Title"/>
+      <select id="tn_type" class="input"><option>Note</option><option>Test</option></select>
+      <input id="tn_content" class="input md:col-span-4" placeholder="File / Image URL"/>
+    </div>
+    <button onclick="teacherAddNote()" class="btn btn-primary mt-3 text-sm"><i class="fa-solid fa-upload"></i> Upload</button>
+  </div>
+
+  <div class="card p-6 mb-6">
+    <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-chart-line text-brand-500 mr-2"></i>Add Student Marks</h3>
+    <div class="grid md:grid-cols-5 gap-3">
+      <select id="tm_student" class="input">${DB.students.map(s=>`<option value="${s.id}">${esc(s.name)} — ${esc(s.className)}</option>`).join('')}</select>
+      <input id="tm_subject" class="input" placeholder="Subject" value="${esc(t.subject)}"/>
+      <input id="tm_obt" type="number" class="input" placeholder="Obtained"/>
+      <input id="tm_total" type="number" class="input" placeholder="Total" value="100"/>
+      <select id="tm_exam" class="input"><option>Mid Term</option><option>Final Term</option><option>Monthly Test</option><option>Quiz</option></select>
+    </div>
+    <button onclick="teacherAddMarks()" class="btn btn-primary mt-3 text-sm"><i class="fa-solid fa-plus"></i> Save Result</button>
+  </div>
+
+  <div class="grid lg:grid-cols-2 gap-6">
+    <div class="card p-6">
+      <h3 class="font-extrabold text-lg mb-4">My Uploaded Material</h3>
+      <div class="space-y-2 max-h-80 overflow-y-auto scrollbar-thin">
+        ${DB.notes.filter(n=>n.teacherId===t.id).slice().reverse().map(n=>`
+          <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+            <div class="min-w-0"><p class="text-sm font-semibold truncate">${esc(n.title)}</p>
+            <p class="text-xs text-slate-500">${esc(n.className)} • ${esc(n.type)}</p></div>
+            <button onclick="delRecord('notes','${n.id}')" class="text-rose-400 hover:scale-125 transition"><i class="fa-solid fa-trash text-xs"></i></button>
+          </div>`).join('') || '<p class="text-sm text-slate-400 text-center py-6">Nothing uploaded.</p>'}
+      </div>
+    </div>
+    <div class="card p-6">
+      <h3 class="font-extrabold text-lg mb-4">Results I Entered</h3>
+      <div class="space-y-2 max-h-80 overflow-y-auto scrollbar-thin">
+        ${DB.marks.slice().reverse().map(m=>`
+          <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+            <div><p class="text-sm font-semibold">${esc(m.studentName)}</p>
+            <p class="text-xs text-slate-500">${esc(m.className)} • ${esc(m.subject)} • ${esc(m.exam)}</p></div>
+            <span class="font-bold text-brand-600 dark:text-brand-300 text-sm">${m.obtained}/${m.total}</span>
+          </div>`).join('') || '<p class="text-sm text-slate-400 text-center py-6">No results.</p>'}
+      </div>
+    </div>
+  </div>`;
+}
+
+function teacherAddNote(){
+  const g = id => document.getElementById(id).value.trim();
+  if (!g('tn_title')) return alertErr('Missing','Title is required.');
+  DB.notes.push({ id:uid('note'), className:g('tn_class'), subject:g('tn_subject'), title:g('tn_title'),
+    type:g('tn_type'), content:g('tn_content'), teacherId:getSession().id, date:today() });
+  saveDB(); renderTeacherPanel(getSession()); alertOk('Uploaded','Students can now see this material.');
+}
+
+function teacherAddMarks(){
+  const g = id => document.getElementById(id).value.trim();
+  const st = DB.students.find(s=>s.id===g('tm_student'));
+  if (!st) return alertErr('Missing','Select a student.');
+  DB.marks.push({ id:uid('mk'), studentId:st.id, studentName:st.name, className:st.className,
+    subject:g('tm_subject'), obtained:Number(g('tm_obt')||0), total:Number(g('tm_total')||100),
+    exam:g('tm_exam'), date:today() });
+  saveDB(); renderTeacherPanel(getSession()); alertOk('Saved','Result stored successfully.');
+}
+
+function teacherActivitiesHTML(t){
+  const myClasses = t.classes && t.classes.length ? t.classes : [CLASS_LIST[0]];
+  return `
+  <div class="card p-6 mb-6">
+    <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-images text-brand-500 mr-2"></i>Add Class Activity</h3>
+    <div class="grid md:grid-cols-3 gap-3">
+      <select id="ta_class" class="input">${myClasses.map(c=>`<option>${c}</option>`).join('')}</select>
+      <input id="ta_title" class="input" placeholder="Activity title"/>
+      <input id="ta_img" class="input" placeholder="Image URL"/>
+      <input id="ta_desc" class="input md:col-span-3" placeholder="Short description"/>
+    </div>
+    <button onclick="teacherAddActivity()" class="btn btn-primary mt-3 text-sm"><i class="fa-solid fa-plus"></i> Add Activity</button>
+  </div>
+
+  <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+    ${DB.activities.filter(a=>a.teacherId===t.id).slice().reverse().map(a=>`
+      <div class="card overflow-hidden group">
+        <div class="hover-zoom h-40"><img src="${esc(a.img||IMG.g1)}" class="w-full h-full object-cover" alt=""/></div>
+        <div class="p-4">
+          <p class="font-bold text-sm group-hover:text-brand-600 transition">${esc(a.title)}</p>
+          <p class="text-xs text-slate-500 mt-1">${esc(a.className)} • ${esc(a.date)}</p>
+          <button onclick="delRecord('activities','${a.id}')" class="text-[11px] text-rose-500 font-semibold mt-2 hover:underline">Delete</button>
+        </div>
+      </div>`).join('') || '<p class="text-sm text-slate-400 col-span-full text-center py-8">No activities uploaded yet.</p>'}
+  </div>`;
+}
+
+function teacherAddActivity(){
+  const g = id => document.getElementById(id).value.trim();
+  if (!g('ta_title')) return alertErr('Missing','Activity title is required.');
+  DB.activities.push({ id:uid('act'), className:g('ta_class'), title:g('ta_title'), desc:g('ta_desc'),
+    img:g('ta_img')||IMG.g1, teacherId:getSession().id, date:today() });
+  saveDB(); renderTeacherPanel(getSession()); alertOk('Added','Activity is now visible on the class page.');
+}
+
+/* =========================================================
+   STUDENT / PARENT PANEL
+   ========================================================= */
+function renderStudentPanel(sess){
+  const nav = [
+    { id:'overview', label:'Overview', icon:'fa-gauge-high', fn:"studentGo('overview')" },
+    { id:'notes', label:'Notes & Tests', icon:'fa-book', fn:"studentGo('notes')" },
+    { id:'results', label:'My Results', icon:'fa-chart-line', fn:"studentGo('results')" },
+    { id:'announcements', label:'Announcements', icon:'fa-bullhorn', fn:"studentGo('announcements')" },
+    { id:'teachers', label:'Our Teachers', icon:'fa-chalkboard-user', fn:"studentGo('teachers')" }
+  ];
+  const content = {
+    overview: studentOverviewHTML,
+    notes: studentNotesHTML,
+    results: studentResultsHTML,
+    announcements: studentAnnouncementsHTML,
+    teachers: studentTeachersHTML
+  }[studentTab] || studentOverviewHTML;
+
+  document.getElementById('portalRoot').innerHTML =
+    portalShell('Student & Parent', sess.name || sess.className, nav, studentTab, content(sess));
+  setSyncBadge(syncState);
+  if (window.AOS) AOS.refreshHard();
+}
+
+function studentGo(tab){ studentTab = tab; renderStudentPanel(getSession()); }
+
+function studentOverviewHTML(sess){
+  const st = DB.students.find(s=>s.id===sess.studentId);
+  const cls = st ? st.className : sess.className;
+  const info = DB.classes[cls] || {};
+  const notes = DB.notes.filter(n=>n.className===cls);
+  const marks = DB.marks.filter(m=>m.className===cls);
+  return `
+  <div class="card p-7 mb-6 bg-gradient-to-r from-brand-600 to-brand-800 !text-white !border-0">
+    <div class="flex items-center gap-5">
+      <img src="${esc(st?st.photo||IMG.avatar:IMG.avatar)}" class="w-20 h-20 rounded-2xl object-cover ring-4 ring-white/30" alt=""/>
+      <div>
+        <h2 class="text-2xl font-extrabold">${esc(st ? st.name : sess.name)}</h2>
+        <p class="text-brand-100 text-sm">${esc(cls)} ${st ? '• Father: ' + esc(st.father) : ''}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
+    ${[['Class', cls,'fa-layer-group','from-brand-500 to-brand-700'],
+       ['Subjects', (info.subjects||[]).length,'fa-book','from-violet-500 to-violet-700'],
+       ['Notes Available', notes.length,'fa-file-lines','from-emerald-500 to-emerald-700'],
+       ['Results Published', marks.length,'fa-chart-line','from-amber-500 to-amber-700']]
+      .map(([l,v,ic,g])=>`
+      <div class="dash-card bg-gradient-to-br ${g}">
+        <i class="fa-solid ${ic} absolute right-5 bottom-4 text-4xl opacity-25"></i>
+        <p class="text-xs uppercase tracking-widest opacity-80">${l}</p>
+        <p class="text-2xl font-extrabold mt-2">${v}</p>
+      </div>`).join('')}
+  </div>
+
+  <div class="grid lg:grid-cols-2 gap-6">
+    <div class="card p-6">
+      <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-book-open text-brand-500 mr-2"></i>Subjects</h3>
+      <div class="flex flex-wrap gap-2">
+        ${(info.subjects||[]).map(s=>`<span class="px-3 py-1.5 rounded-lg bg-brand-50 dark:bg-slate-800 text-brand-700 dark:text-brand-300 text-xs font-semibold">${esc(s)}</span>`).join('') || '<p class="text-sm text-slate-400">—</p>'}
+      </div>
+      <h3 class="font-extrabold text-lg mt-6 mb-3"><i class="fa-solid fa-calendar-check text-brand-500 mr-2"></i>Study Planning</h3>
+      <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${esc(info.planning||'—')}</p>
+    </div>
+    <div class="card p-6">
+      <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-images text-brand-500 mr-2"></i>Class Activities</h3>
+      <div class="grid grid-cols-2 gap-3">
+        ${DB.activities.filter(a=>a.className===cls).slice(0,4).map(a=>`
+          <div class="rounded-xl overflow-hidden hover-zoom"><img src="${esc(a.img||IMG.g1)}" class="w-full h-24 object-cover" alt=""/>
+          <p class="text-[11px] font-semibold p-2 truncate">${esc(a.title)}</p></div>`).join('') || '<p class="text-sm text-slate-400 col-span-2">No activities yet.</p>'}
+      </div>
+    </div>
+  </div>`;
+}
+
+function studentNotesHTML(sess){
+  const st = DB.students.find(s=>s.id===sess.studentId);
+  const cls = st ? st.className : sess.className;
+  const list = DB.notes.filter(n=>n.className===cls);
+  return `
+  <div class="card p-6">
+    <h3 class="font-extrabold text-lg mb-1"><i class="fa-solid fa-book text-brand-500 mr-2"></i>Notes &amp; Tests — ${esc(cls)}</h3>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mb-5">Material uploaded by your teachers.</p>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      ${list.map(n=>`
+        <div class="card p-5 group">
+          <span class="text-[10px] font-bold px-2.5 py-1 rounded-full ${n.type==='Test'?'bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-300':'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-300'}">${esc(n.type)}</span>
+          <h4 class="font-bold mt-3 text-sm group-hover:text-brand-600 transition">${esc(n.title)}</h4>
+          <p class="text-xs text-slate-500 mt-1">${esc(n.subject)} • ${esc(n.date)}</p>
+          ${n.content?`<a href="${esc(n.content)}" target="_blank" class="btn btn-primary text-xs mt-3 w-full !py-2"><i class="fa-solid fa-download"></i> Open</a>`:''}
+        </div>`).join('') || '<p class="text-sm text-slate-400 col-span-full text-center py-8">No material uploaded yet.</p>'}
+    </div>
+  </div>`;
+}
+
+function studentResultsHTML(sess){
+  const st = DB.students.find(s=>s.id===sess.studentId);
+  const list = st ? DB.marks.filter(m=>m.studentId===st.id) : DB.marks.filter(m=>m.className===sess.className);
+  const total = list.reduce((a,m)=>a+m.obtained,0);
+  const max = list.reduce((a,m)=>a+m.total,0);
+  const pct = max ? Math.round(total/max*100) : 0;
+  return `
+  <div class="card p-6 mb-6 text-center">
+    <div class="relative w-40 h-40 mx-auto">
+      <svg class="w-full h-full -rotate-90" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="52" fill="none" stroke="#e2e8f0" stroke-width="12" class="dark:stroke-slate-700"/>
+        <circle cx="60" cy="60" r="52" fill="none" stroke="#1e6fd9" stroke-width="12" stroke-linecap="round"
+          stroke-dasharray="${2*Math.PI*52}" stroke-dashoffset="${2*Math.PI*52*(1-pct/100)}" style="transition:stroke-dashoffset 1.2s ease"/>
+      </svg>
+      <div class="absolute inset-0 grid place-items-center">
+        <div><p class="text-3xl font-extrabold text-brand-600 dark:text-brand-300">${pct}%</p>
+        <p class="text-[11px] uppercase tracking-widest text-slate-400">Overall</p></div>
+      </div>
+    </div>
+    <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">${total} / ${max} marks obtained</p>
+  </div>
+
+  <div class="card p-6">
+    <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-chart-line text-brand-500 mr-2"></i>Result Sheet</h3>
+    <div class="overflow-x-auto scrollbar-thin">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-100 dark:bg-slate-800 text-left"><tr>
+          <th class="p-3">Subject</th><th class="p-3">Exam</th><th class="p-3">Obtained</th><th class="p-3">Total</th><th class="p-3">%</th><th class="p-3">Date</th></tr></thead>
+        <tbody>
+          ${list.map(m=>`<tr class="border-t border-slate-100 dark:border-slate-800">
+            <td class="p-3 font-semibold">${esc(m.subject)}</td><td class="p-3">${esc(m.exam)}</td>
+            <td class="p-3">${m.obtained}</td><td class="p-3">${m.total}</td>
+            <td class="p-3 font-bold text-brand-600 dark:text-brand-300">${Math.round(m.obtained/m.total*100)}%</td>
+            <td class="p-3">${esc(m.date)}</td></tr>`).join('') || '<tr><td colspan="6" class="p-6 text-center text-slate-400">No results published yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function studentAnnouncementsHTML(sess){
+  const list = DB.announcements.filter(a=>['All','Students','Parents'].includes(a.target));
+  return `
+  <div class="card p-6">
+    <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-bullhorn text-brand-500 mr-2"></i>Announcements</h3>
+    <div class="space-y-3">
+      ${list.slice().reverse().map(a=>`
+        <div class="p-4 rounded-xl bg-brand-50 dark:bg-slate-800/60 border-l-4 border-brand-500 hover:translate-x-1 transition">
+          <p class="text-sm">${esc(a.text)}</p>
+          <p class="text-[11px] text-slate-400 mt-1">${esc(a.date)} • For: ${esc(a.target)}</p>
+        </div>`).join('') || '<p class="text-sm text-slate-400 text-center py-8">No announcements.</p>'}
+    </div>
+  </div>`;
+}
+
+function studentTeachersHTML(sess){
+  return `
+  <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+    ${DB.teachers.map(t=>`
+      <div class="card p-5 text-center group">
+        <img src="${esc(t.pic||IMG.avatar)}" class="w-24 h-24 rounded-2xl object-cover mx-auto group-hover:scale-105 transition" alt=""/>
+        <p class="font-bold mt-4">${esc(t.name)}</p>
+        <p class="text-xs text-brand-500">${esc(t.subject)}</p>
+        <p class="text-[11px] text-slate-400 mt-1">${esc(t.education)}</p>
+        <a href="#/teacher/${t.id}" class="btn btn-primary text-xs mt-4 w-full !py-2"><i class="fa-solid fa-user"></i> Profile</a>
+      </div>`).join('')}
+  </div>`;
+}
+
+/* =========================================================
+   BOOT
+   ========================================================= */
+(async function boot(){
+  applyTheme();
+  renderNav();
+
+  await loadDB();
+
+  // hide loader
+  setTimeout(()=>{
+    const l = document.getElementById('loader');
+    l.classList.add('hide');
+    const site = document.getElementById('site');
+    site.classList.remove('opacity-0');
+    site.classList.add('opacity-100');
+    setTimeout(()=>l.remove(), 900);
+  }, 1200);
+
+  AOS.init({ duration: 800, easing: 'ease-out-cubic', once: true, offset: 60 });
+
+  renderFooter();
+  router();
+  window.addEventListener('hashchange', router);
+
+  // re-render nav/footer when data changes elsewhere
+  document.addEventListener('click', e => {
+    const a = e.target.closest('a[href^="#/"]');
+    if (a) document.getElementById('mobileNav')?.classList.add('hidden');
+  });
+})();
+</script>
+</body>
+</html>
