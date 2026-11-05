@@ -147,6 +147,16 @@
   @keyframes marquee{ from{transform:translateX(0)} to{transform:translateX(-50%)} }
 
   [data-aos]{ will-change:transform,opacity; }
+
+  /* ========== HERO IMAGE PICKER ========== */
+  .hero-pick{ position:relative; border-radius:.75rem; overflow:hidden; cursor:pointer; transition:all .25s;
+    border:3px solid transparent; }
+  .hero-pick img{ width:100%; height:70px; object-fit:cover; display:block; transition:transform .4s; }
+  .hero-pick:hover{ transform:scale(1.05); box-shadow:0 8px 22px -8px rgba(30,111,217,.6); }
+  .hero-pick:hover img{ transform:scale(1.08); }
+  .hero-pick.selected{ border-color:#1e6fd9; box-shadow:0 0 0 4px rgba(30,111,217,.2); }
+  .hero-pick .check{ position:absolute; top:4px; right:4px; width:20px; height:20px; border-radius:50%;
+    background:#1e6fd9; color:#fff; display:grid; place-items:center; font-size:10px; }
 </style>
 </head>
 
@@ -225,11 +235,19 @@
 <!-- ==================== APPLICATION SCRIPT ==================== -->
 <script>
 /* =========================================================
-   SUPABASE CLIENT
+   SUPABASE CLIENT  —  CREDENTIALS CONFIRMED
    ========================================================= */
 const SUPABASE_URL = 'https://kmodlsnudygkqoieqtwx.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_KnxU90CKMVVRbPgwDV8xWQ_Mga3V2ky';
 const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+if (sb) {
+  console.log('%c[Supabase] Client initialized ✅', 'color:#22c55e;font-weight:bold');
+  console.log('   URL:', SUPABASE_URL);
+  console.log('   Key:', SUPABASE_KEY.slice(0, 30) + '...');
+} else {
+  console.warn('[Supabase] Client NOT initialized — running in localStorage-only mode.');
+}
 
 /* =========================================================
    STATIC DATA
@@ -265,7 +283,7 @@ const uid = (p='id') => p + '_' + Date.now().toString(36) + Math.random().toStri
 const today = () => new Date().toISOString().slice(0,10);
 
 /* =========================================================
-   DEFAULT DATABASE (deep JSON structure stored in one column)
+   DEFAULT DATABASE
    ========================================================= */
 const DEFAULT_DB = {
   _meta: { version: 1, school: 'Inspire School System Muzaffargarh' },
@@ -445,20 +463,21 @@ function setSyncBadge(state){
 }
 
 async function loadDB(){
-  // 1) Try Supabase
   if (sb){
     try{
       const { data, error } = await sb.from('record').select('*').limit(1);
-      if (!error && data && data.length && data[0].record){
+      if (error) throw error;
+      if (data && data.length && data[0].record){
         const parsed = JSON.parse(data[0].record);
         DB = mergeDeep(JSON.parse(JSON.stringify(DEFAULT_DB)), parsed);
         syncState = 'synced';
         localStorage.setItem('inspire_db_backup', JSON.stringify(DB));
+        console.log('%c[Supabase] Data loaded from cloud ✅', 'color:#22c55e');
         return;
       }
+      console.log('[Supabase] No existing record — will push defaults on first save.');
     }catch(e){ console.warn('[Supabase load]', e.message); }
   }
-  // 2) LocalStorage fallback
   const local = localStorage.getItem('inspire_db_backup');
   if (local){
     try{ DB = mergeDeep(JSON.parse(JSON.stringify(DEFAULT_DB)), JSON.parse(local)); return; }catch(e){}
@@ -484,6 +503,7 @@ async function pushRemote(){
       if (ins.error) throw ins.error;
     }
     setSyncBadge('synced');
+    console.log('%c[Supabase] Data saved to cloud ✅', 'color:#22c55e');
   }catch(e){
     console.warn('[Supabase save]', e.message);
     setSyncBadge('local');
@@ -525,7 +545,6 @@ function logoSVG(cls='w-12 h-12'){
         <stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#dbeeff"/>
       </linearGradient>
     </defs>
-    <!-- laurel left -->
     <g stroke="#1e6fd9" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".95">
       <path d="M20 96 C 4 74, 6 44, 26 22"/>
       <path d="M20 96 C 30 92, 34 85, 33 78"/>
@@ -534,7 +553,6 @@ function logoSVG(cls='w-12 h-12'){
       <path d="M13 38 C 21 42, 27 39, 29 33"/>
       <path d="M22 22 C 28 28, 34 27, 37 22"/>
     </g>
-    <!-- laurel right -->
     <g stroke="#1e6fd9" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".95">
       <path d="M100 96 C 116 74, 114 44, 94 22"/>
       <path d="M100 96 C 90 92, 86 85, 87 78"/>
@@ -543,19 +561,15 @@ function logoSVG(cls='w-12 h-12'){
       <path d="M107 38 C 99 42, 93 39, 91 33"/>
       <path d="M98 22 C 92 28, 86 27, 83 22"/>
     </g>
-    <!-- graduation cap -->
     <path d="M60 16 L 96 31 L 60 46 L 24 31 Z" fill="url(#lg1)"/>
     <path d="M60 22 L 84 32 L 60 41 L 36 32 Z" fill="#fff" opacity=".28"/>
     <path d="M86 37 L 86 53" stroke="#1558b0" stroke-width="2.6" stroke-linecap="round"/>
     <circle cx="86" cy="56" r="3.4" fill="#1e6fd9"/>
-    <!-- pen nib -->
     <path d="M60 47 L 67 61 L 60 69 L 53 61 Z" fill="#0b2f63"/>
     <circle cx="60" cy="59" r="2.4" fill="#fff"/>
-    <!-- open book -->
     <path d="M60 72 C 50 66, 38 64, 28 66 L 28 90 C 38 88, 50 90, 60 96 C 70 90, 82 88, 92 90 L 92 66 C 82 64, 70 66, 60 72 Z"
           fill="url(#lg2)" stroke="#1e6fd9" stroke-width="2.8" stroke-linejoin="round"/>
     <path d="M60 72 L 60 96" stroke="#1e6fd9" stroke-width="2"/>
-    <!-- ribbon -->
     <path d="M28 100 L 92 100 L 86 112 L 60 105 L 34 112 Z" fill="url(#lg1)"/>
   </svg>`;
 }
@@ -584,6 +598,32 @@ const money = n => 'Rs. ' + Number(n || 0).toLocaleString('en-PK');
 function waLink(number, text){
   const clean = String(number).replace(/\D/g,'').replace(/^0/, '92');
   return `https://wa.me/${clean}?text=${encodeURIComponent(text)}`;
+}
+
+/* =========================================================
+   IMAGE FILE → COMPRESSED BASE64
+   ========================================================= */
+function compressImageFile(file, maxWidth = 1200, quality = 0.8){
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith('image/')) return reject(new Error('Please select an image file.'));
+    if (file.size > 8 * 1024 * 1024) return reject(new Error('File too large — max 8MB.'));
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const scale = Math.min(1, maxWidth / img.width);
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => reject(new Error('Could not read image.'));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('Could not read file.'));
+    reader.readAsDataURL(file);
+  });
 }
 
 /* =========================================================
@@ -725,9 +765,8 @@ function renderHome(){
     </div>`).join('');
 
   return `
-  <!-- HERO -->
   <section class="relative min-h-[86vh] flex items-center overflow-hidden">
-    <img src="${esc(s.hero.image)}" class="absolute inset-0 w-full h-full object-cover scale-105 animate-[spin_0s]" style="animation:none" alt="hero"/>
+    <img src="${esc(s.hero.image)}" class="absolute inset-0 w-full h-full object-cover" alt="hero"/>
     <div class="absolute inset-0 bg-gradient-to-br from-brand-950/92 via-brand-900/75 to-brand-700/60"></div>
     <div class="absolute inset-0 opacity-20" style="background-image:radial-gradient(circle at 20% 30%,#60b0ff 0,transparent 45%),radial-gradient(circle at 80% 70%,#93cdff 0,transparent 45%)"></div>
     <div class="relative max-w-7xl mx-auto px-4 py-24 text-white">
@@ -757,7 +796,6 @@ function renderHome(){
     <div class="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/70 animate-bounce"><i class="fa-solid fa-chevron-down text-xl"></i></div>
   </section>
 
-  <!-- MARQUEE STRIP -->
   <div class="bg-brand-600 text-white py-3 overflow-hidden">
     <div class="marquee text-sm font-semibold tracking-wider uppercase">
       ${Array(2).fill(`<span class="flex items-center gap-2"><i class="fa-solid fa-graduation-cap"></i> Admissions Open</span>
@@ -768,7 +806,6 @@ function renderHome(){
     </div>
   </div>
 
-  <!-- SLIDESHOW -->
   <section class="max-w-7xl mx-auto px-4 py-20">
     <div class="text-center mb-12" data-aos="fade-up">
       <p class="text-xs font-bold tracking-[4px] uppercase text-brand-500 mb-2">Life at Inspire</p>
@@ -782,7 +819,6 @@ function renderHome(){
     </div>
   </section>
 
-  <!-- PRINCIPAL -->
   <section class="max-w-7xl mx-auto px-4 py-14">
     <div class="card p-8 md:p-12 grid md:grid-cols-3 gap-10 items-center" data-aos="fade-up">
       <div class="text-center">
@@ -803,7 +839,6 @@ function renderHome(){
     </div>
   </section>
 
-  <!-- WHY US -->
   <section class="bg-gradient-to-b from-brand-50 to-white dark:from-slate-900 dark:to-slate-950 py-20">
     <div class="max-w-7xl mx-auto px-4">
       <div class="text-center mb-12" data-aos="fade-up">
@@ -823,7 +858,6 @@ function renderHome(){
     </div>
   </section>
 
-  <!-- ADMINISTRATION -->
   <section class="max-w-7xl mx-auto px-4 py-20">
     <div class="text-center mb-12" data-aos="fade-up">
       <p class="text-xs font-bold tracking-[4px] uppercase text-brand-500 mb-2">Leadership</p>
@@ -843,7 +877,6 @@ function renderHome(){
     </div>
   </section>
 
-  <!-- TEACHERS -->
   <section class="bg-brand-950 text-white py-20">
     <div class="max-w-7xl mx-auto px-4">
       <div class="text-center mb-12" data-aos="fade-up">
@@ -867,7 +900,6 @@ function renderHome(){
     </div>
   </section>
 
-  <!-- GALLERY / JOURNEY -->
   <section class="max-w-7xl mx-auto px-4 py-20">
     <div class="text-center mb-12" data-aos="fade-up">
       <p class="text-xs font-bold tracking-[4px] uppercase text-brand-500 mb-2">Our Journey</p>
@@ -879,7 +911,6 @@ function renderHome(){
     </div>
   </section>
 
-  <!-- MAP -->
   <section class="max-w-7xl mx-auto px-4 pb-20">
     <div class="card overflow-hidden" data-aos="fade-up">
       <div class="p-6 flex flex-wrap items-center justify-between gap-4 border-b border-brand-100 dark:border-slate-800">
@@ -895,7 +926,6 @@ function renderHome(){
     </div>
   </section>
 
-  <!-- CTA -->
   <section class="max-w-7xl mx-auto px-4 pb-10">
     <div class="rounded-3xl bg-gradient-to-r from-brand-600 via-brand-700 to-brand-900 p-10 md:p-16 text-center text-white relative overflow-hidden" data-aos="zoom-in">
       <div class="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-white/10"></div>
@@ -1425,10 +1455,9 @@ function showPortal(type){
   }
 }
 
-function portalShell(title, subtitle, navItems, activeTab, contentHTML, onTabFn){
+function portalShell(title, subtitle, navItems, activeTab, contentHTML){
   return `
   <div class="min-h-screen flex bg-slate-100 dark:bg-slate-950">
-    <!-- SIDEBAR -->
     <aside id="portalSidebar" class="fixed lg:static inset-y-0 left-0 z-50 w-72 bg-brand-950 text-white flex flex-col -translate-x-full lg:translate-x-0 transition-transform duration-300">
       <div class="p-6 flex items-center gap-3 border-b border-white/10">
         ${logoSVG('w-11 h-11')}
@@ -1450,7 +1479,6 @@ function portalShell(title, subtitle, navItems, activeTab, contentHTML, onTabFn)
       </div>
     </aside>
 
-    <!-- MAIN -->
     <div class="flex-1 min-w-0">
       <header class="sticky top-0 z-30 glass border-b border-brand-100 dark:border-slate-800 px-5 py-4 flex items-center justify-between">
         <div class="flex items-center gap-3">
@@ -1687,7 +1715,7 @@ function adminDashboardHTML(){
   </div>`;
 }
 
-/* ---------- WEBSITE EDITOR ---------- */
+/* ---------- WEBSITE EDITOR (with Gallery Picker Hero) ---------- */
 function adminWebsiteHTML(){
   const s = DB.settings;
   return `
@@ -1696,7 +1724,31 @@ function adminWebsiteHTML(){
     <div class="grid md:grid-cols-2 gap-4">
       <div class="md:col-span-2"><label class="label">Hero Title</label><input id="w_heroTitle" class="input" value="${esc(s.hero.title)}"/></div>
       <div class="md:col-span-2"><label class="label">Hero Subtitle</label><textarea id="w_heroSub" rows="2" class="input">${esc(s.hero.subtitle)}</textarea></div>
-      <div class="md:col-span-2"><label class="label">Hero Image URL</label><input id="w_heroImg" class="input" value="${esc(s.hero.image)}"/></div>
+
+      <div class="md:col-span-2">
+        <label class="label">Hero Image — Select from Gallery</label>
+        <p class="text-[11px] text-slate-400 mb-2">
+          <i class="fa-solid fa-info-circle mr-1"></i>
+          Click any gallery image below to set it as the hero background. Or upload a new file — it will automatically be added to your gallery and set as hero.
+        </p>
+        <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 mb-3" id="heroPicker">
+          ${s.gallery.map((g,i)=>`
+            <button type="button" onclick="selectHeroImage(${i})" title="${esc(g.title)}"
+              class="hero-pick ${s.hero.image === g.img ? 'selected' : ''}">
+              <img src="${esc(g.img)}" alt="${esc(g.title)}"/>
+              ${s.hero.image === g.img ? '<span class="check"><i class="fa-solid fa-check"></i></span>' : ''}
+            </button>
+          `).join('')}
+          ${s.gallery.length === 0 ? '<p class="text-sm text-slate-400 col-span-full py-4">No gallery images yet — upload one below.</p>' : ''}
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <label class="btn btn-primary text-sm cursor-pointer">
+            <i class="fa-solid fa-upload"></i> Upload New Image
+            <input type="file" accept="image/*" class="hidden" onchange="uploadHeroImage(event)"/>
+          </label>
+          <span class="text-xs text-slate-400" id="heroUploadStatus"></span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1748,7 +1800,13 @@ function adminWebsiteHTML(){
       <input id="g_desc" class="input" placeholder="Short description"/>
       <input id="g_img" class="input" placeholder="Image URL"/>
     </div>
-    <button onclick="addGalleryItem()" class="btn btn-primary mt-3 text-sm"><i class="fa-solid fa-plus"></i> Add Gallery Image</button>
+    <div class="flex flex-wrap gap-2 mt-3">
+      <button onclick="addGalleryItem()" class="btn btn-primary text-sm"><i class="fa-solid fa-plus"></i> Add via URL</button>
+      <label class="btn text-sm !bg-emerald-600 !text-white cursor-pointer">
+        <i class="fa-solid fa-upload"></i> Upload File
+        <input type="file" accept="image/*" class="hidden" onchange="uploadGalleryImage(event)"/>
+      </label>
+    </div>
   </div>
 
   <div class="card p-6">
@@ -1757,12 +1815,68 @@ function adminWebsiteHTML(){
   </div>`;
 }
 
+/* ---- HERO IMAGE SELECTION ---- */
+function selectHeroImage(idx){
+  const g = DB.settings.gallery[idx];
+  if (!g) return;
+  DB.settings.hero.image = g.img;
+  saveDB();
+  renderAdminPanel();
+  toast('success', 'Hero image set: ' + (g.title || 'Untitled'));
+}
+
+/* ---- HERO IMAGE FILE UPLOAD ---- */
+async function uploadHeroImage(event){
+  const file = event.target.files[0];
+  if (!file) return;
+  const status = document.getElementById('heroUploadStatus');
+  if (status) status.textContent = 'Uploading & compressing...';
+
+  try{
+    const dataUrl = await compressImageFile(file, 1600, 0.85);
+    const title = 'Hero — ' + new Date().toLocaleDateString();
+    DB.settings.gallery.push({
+      title,
+      desc: 'Uploaded from hero editor',
+      img: dataUrl
+    });
+    DB.settings.hero.image = dataUrl;
+    saveDB();
+    renderAdminPanel();
+    alertOk('Uploaded ✅', 'Image uploaded, added to gallery, and set as hero background.');
+  }catch(err){
+    if (status) status.textContent = '';
+    alertErr('Upload Failed', err.message);
+  }
+  event.target.value = '';
+}
+
+/* ---- GALLERY FILE UPLOAD ---- */
+async function uploadGalleryImage(event){
+  const file = event.target.files[0];
+  if (!file) return;
+
+  try{
+    const dataUrl = await compressImageFile(file, 1200, 0.82);
+    const title = (document.getElementById('g_title')?.value || '').trim() || 'Untitled';
+    const desc = (document.getElementById('g_desc')?.value || '').trim() || '';
+    DB.settings.gallery.push({ title, desc, img: dataUrl });
+    saveDB();
+    renderAdminPanel();
+    alertOk('Uploaded ✅', 'Image added to gallery.');
+  }catch(err){
+    alertErr('Upload Failed', err.message);
+  }
+  event.target.value = '';
+}
+
+/* ---- SAVE WEBSITE (hero image is now managed separately) ---- */
 function saveWebsite(){
   const g = id => document.getElementById(id)?.value ?? '';
   const s = DB.settings;
   s.hero.title = g('w_heroTitle');
   s.hero.subtitle = g('w_heroSub');
-  s.hero.image = g('w_heroImg');
+  // ⚠️ s.hero.image is NOT set here anymore — it's handled by selectHeroImage() / uploadHeroImage()
   s.about = g('w_about');
   s.vision = g('w_vision');
   s.mission = g('w_mission');
@@ -1812,7 +1926,6 @@ function adminFinanceHTML(){
       </div>`).join('')}
   </div>
 
-  <!-- ADD FEE -->
   <div class="card p-6 mb-6">
     <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-plus text-emerald-500 mr-2"></i>Add Fee Record</h3>
     <div class="grid md:grid-cols-3 gap-3">
@@ -1826,7 +1939,6 @@ function adminFinanceHTML(){
     <button onclick="addFee()" class="btn btn-primary mt-3 text-sm"><i class="fa-solid fa-plus"></i> Add Fee</button>
   </div>
 
-  <!-- ADD EXPENSE -->
   <div class="card p-6 mb-6">
     <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-receipt text-rose-500 mr-2"></i>Add Expense</h3>
     <div class="grid md:grid-cols-4 gap-3">
@@ -1841,7 +1953,6 @@ function adminFinanceHTML(){
     <button onclick="addExpense()" class="btn btn-primary mt-3 text-sm"><i class="fa-solid fa-plus"></i> Add Expense</button>
   </div>
 
-  <!-- ADD SALARY -->
   <div class="card p-6 mb-6">
     <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-money-check-dollar text-amber-500 mr-2"></i>Add Salary Payment</h3>
     <div class="grid md:grid-cols-5 gap-3">
@@ -1854,7 +1965,6 @@ function adminFinanceHTML(){
     <button onclick="addSalary()" class="btn btn-primary mt-3 text-sm"><i class="fa-solid fa-plus"></i> Add Salary</button>
   </div>
 
-  <!-- RECORDS -->
   <div class="card p-6 mb-6">
     <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-list text-emerald-500 mr-2"></i>Fee Records (${DB.fees.length})</h3>
     <div class="overflow-x-auto scrollbar-thin">
@@ -2237,14 +2347,55 @@ function adminSettingsHTML(){
   </div>
 
   <div class="card p-6">
-    <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-cloud text-brand-500 mr-2"></i>Database</h3>
-    <p class="text-sm text-slate-500 dark:text-slate-400 mb-3">All data is stored as a single JSON record in the Supabase <code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800">record</code> table (column <code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800">record</code>) with a local backup.</p>
+    <h3 class="font-extrabold text-lg mb-4"><i class="fa-solid fa-cloud text-brand-500 mr-2"></i>Supabase Connection</h3>
+    <div class="space-y-2 text-sm mb-4">
+      <div class="flex justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60">
+        <span class="text-slate-500">Project URL</span>
+        <span class="font-mono text-xs">${esc(SUPABASE_URL)}</span>
+      </div>
+      <div class="flex justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60">
+        <span class="text-slate-500">Publishable Key</span>
+        <span class="font-mono text-xs">${esc(SUPABASE_KEY.slice(0,22))}...</span>
+      </div>
+      <div class="flex justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60">
+        <span class="text-slate-500">Client Status</span>
+        <span class="font-bold ${sb ? 'text-emerald-500' : 'text-rose-500'}">${sb ? 'Initialized ✅' : 'NOT Initialized ❌'}</span>
+      </div>
+      <div class="flex justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60">
+        <span class="text-slate-500">Sync State</span>
+        <span id="settingsSyncState" class="font-bold">${syncState === 'synced' ? 'Cloud Synced' : 'Local Mode'}</span>
+      </div>
+    </div>
     <div class="flex flex-wrap gap-3">
-      <button onclick="pushRemote().then(()=>alertOk('Synced','Data pushed to Supabase.'))" class="btn btn-primary text-sm"><i class="fa-solid fa-cloud-arrow-up"></i> Force Cloud Sync</button>
-      <button onclick="exportDB()" class="btn btn-primary text-sm !bg-slate-600"><i class="fa-solid fa-download"></i> Export JSON</button>
+      <button onclick="forceSync()" class="btn btn-primary text-sm"><i class="fa-solid fa-cloud-arrow-up"></i> Force Cloud Sync</button>
+      <button onclick="testConnection()" class="btn text-sm bg-slate-600 text-white hover:bg-slate-700"><i class="fa-solid fa-vial"></i> Test Connection</button>
+      <button onclick="exportDB()" class="btn text-sm bg-slate-600 text-white hover:bg-slate-700"><i class="fa-solid fa-download"></i> Export JSON</button>
       <button onclick="resetDB()" class="btn text-sm bg-rose-100 text-rose-600 hover:bg-rose-200"><i class="fa-solid fa-rotate-left"></i> Reset Database</button>
     </div>
   </div>`;
+}
+
+async function forceSync(){
+  await pushRemote();
+  setSyncBadge(syncState);
+  const el = document.getElementById('settingsSyncState');
+  if (el) el.textContent = syncState === 'synced' ? 'Cloud Synced ✅' : 'Local Mode ⚠️';
+  if (syncState === 'synced') alertOk('Synced!', 'All data pushed to Supabase successfully.');
+  else alertErr('Sync Failed', 'Could not reach Supabase. Check that the table + RLS policies are set up. See console for details.');
+}
+
+async function testConnection(){
+  if (!sb) return alertErr('Not Connected', 'Supabase client is not initialized. Check that the CDN loaded.');
+  try{
+    const { data, error, count } = await sb.from('record').select('*', { count: 'exact' }).limit(1);
+    if (error) throw error;
+    alertOk('Connection OK ✅',
+      `Table found. Rows: ${count ?? (data?.length || 0)}.\n` +
+      (data && data.length ? 'Data column present.' : 'Table is empty — first save will insert a row.')
+    );
+  }catch(e){
+    alertErr('Connection Failed ❌', e.message + '\n\nMake sure the SQL setup (table + RLS) has been run in Supabase.');
+  }
 }
 
 function changeAdminPass(){
@@ -2717,14 +2868,12 @@ function studentTeachersHTML(sess){
 
   await loadDB();
 
-  // hide loader
   setTimeout(()=>{
     const l = document.getElementById('loader');
-    l.classList.add('hide');
+    if (l) l.classList.add('hide');
     const site = document.getElementById('site');
-    site.classList.remove('opacity-0');
-    site.classList.add('opacity-100');
-    setTimeout(()=>l.remove(), 900);
+    if (site){ site.classList.remove('opacity-0'); site.classList.add('opacity-100'); }
+    setTimeout(()=>{ const x = document.getElementById('loader'); if (x) x.remove(); }, 900);
   }, 1200);
 
   AOS.init({ duration: 800, easing: 'ease-out-cubic', once: true, offset: 60 });
@@ -2733,11 +2882,16 @@ function studentTeachersHTML(sess){
   router();
   window.addEventListener('hashchange', router);
 
-  // re-render nav/footer when data changes elsewhere
   document.addEventListener('click', e => {
     const a = e.target.closest('a[href^="#/"]');
     if (a) document.getElementById('mobileNav')?.classList.add('hidden');
   });
+
+  // Console summary
+  console.log('%c🏫 Inspire School System — Supabase Status', 'color:#1e6fd9;font-weight:bold;font-size:13px');
+  console.log('   Client:', sb ? '✅ Ready' : '❌ Not initialized');
+  console.log('   Sync State:', syncState === 'synced' ? '✅ Cloud Synced' : '⚠️ Local Mode (will retry on save)');
+  console.log('   Tip: Admin Panel → Settings → "Test Connection" button to verify.');
 })();
 </script>
 </body>
