@@ -644,6 +644,112 @@ function closeModal(){
 }
 
 /* =========================================================
+   GALLERY / FILE PICKER HELPERS
+   ========================================================= */
+function imagePickerField(fieldId, currentValue, label='Image'){
+  const val = currentValue || '';
+  return `
+    <div>
+      <label class="label">${label}</label>
+      <div class="flex items-center gap-2">
+        <img id="${fieldId}_preview" src="${esc(val || IMG.avatar)}"
+          class="w-14 h-14 rounded-xl object-cover border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800"/>
+        <input type="hidden" id="${fieldId}" value="${esc(val)}"/>
+        <button type="button" onclick="pickImageForField('${fieldId}')"
+          class="btn text-xs bg-brand-500 text-white hover:bg-brand-600 flex-1">
+          <i class="fa-solid fa-images"></i> Select from Gallery
+        </button>
+      </div>
+    </div>`;
+}
+
+function pickImageForField(fieldId){
+  const current = document.getElementById(fieldId)?.value || '';
+  openGalleryPicker((img) => {
+    const input = document.getElementById(fieldId);
+    const preview = document.getElementById(fieldId + '_preview');
+    if (input) input.value = img;
+    if (preview) preview.src = img;
+  }, current);
+}
+
+function openGalleryPicker(callback, currentValue = ''){
+  const gallery = DB.settings.gallery;
+  window._galleryCallback = callback;
+  openModal(`
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <h3 class="text-2xl font-extrabold"><i class="fa-solid fa-images text-brand-500 mr-2"></i>Select from Gallery</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Click an image to select, or upload a new one.</p>
+      </div>
+      <button onclick="closeModal()" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-100 hover:text-rose-600 transition"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-4 max-h-96 overflow-y-auto scrollbar-thin">
+      ${gallery.map((g,i)=>`
+        <button type="button" onclick="pickGalleryImage(${i})"
+          class="hero-pick ${currentValue === g.img ? 'selected' : ''}">
+          <img src="${esc(g.img)}" alt="${esc(g.title)}"/>
+          ${currentValue === g.img ? '<span class="check"><i class="fa-solid fa-check"></i></span>' : ''}
+        </button>
+      `).join('') || '<p class="text-sm text-slate-400 col-span-full py-6 text-center">Gallery is empty — upload one below.</p>'}
+    </div>
+    <div class="border-t border-slate-200 dark:border-slate-700 pt-4">
+      <label class="btn btn-primary w-full cursor-pointer">
+        <i class="fa-solid fa-upload"></i> Upload New Image
+        <input type="file" accept="image/*" class="hidden" onchange="handleGalleryUpload(event)"/>
+      </label>
+    </div>
+  `, true);
+}
+
+function pickGalleryImage(idx){
+  const g = DB.settings.gallery[idx];
+  if (!g) return;
+  if (typeof window._galleryCallback === 'function') window._galleryCallback(g.img);
+  window._galleryCallback = null;
+  closeModal();
+  toast('success', 'Image selected');
+}
+
+async function handleGalleryUpload(event){
+  const file = event.target.files[0];
+  if (!file) return;
+  try {
+    const dataUrl = await compressImageFile(file, 1200, 0.85);
+    const title = 'Uploaded ' + new Date().toLocaleString();
+    DB.settings.gallery.push({ title, desc: 'Uploaded via gallery picker', img: dataUrl });
+    saveDB();
+    if (typeof window._galleryCallback === 'function') window._galleryCallback(dataUrl);
+    window._galleryCallback = null;
+    closeModal();
+    toast('success', 'Image uploaded and selected');
+  } catch(err) {
+    alertErr('Upload Failed', err.message);
+  }
+  event.target.value = '';
+}
+
+function handleFileUpload(event, fieldId, labelId, maxMB = 3){
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > maxMB * 1024 * 1024) {
+    alertErr('File too large', `Max ${maxMB}MB allowed.`);
+    event.target.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const el = document.getElementById(fieldId);
+    if (el) el.value = e.target.result;
+    const lbl = document.getElementById(labelId);
+    if (lbl) lbl.textContent = file.name;
+    toast('success', 'File attached: ' + file.name);
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+
+/* =========================================================
    NAVBAR RENDER
    ========================================================= */
 function renderNav(){
@@ -1715,7 +1821,7 @@ function adminDashboardHTML(){
   </div>`;
 }
 
-/* ---------- WEBSITE EDITOR (with Gallery Picker Hero) ---------- */
+/* ---------- WEBSITE EDITOR (with Gallery Picker Hero + Administration Manager) ---------- */
 function adminWebsiteHTML(){
   const s = DB.settings;
   return `
@@ -1766,8 +1872,46 @@ function adminWebsiteHTML(){
     <div class="grid md:grid-cols-2 gap-4">
       <div><label class="label">Name</label><input id="w_pName" class="input" value="${esc(s.principal.name)}"/></div>
       <div><label class="label">WhatsApp Number</label><input id="w_pPhone" class="input" value="${esc(s.principal.phone)}"/></div>
-      <div class="md:col-span-2"><label class="label">Photo URL</label><input id="w_pPic" class="input" value="${esc(s.principal.pic)}"/></div>
+      <div class="md:col-span-2">${imagePickerField('w_pPic', s.principal.pic, 'Principal Photo')}</div>
       <div class="md:col-span-2"><label class="label">Message</label><textarea id="w_pMsg" rows="3" class="input">${esc(s.principal.message)}</textarea></div>
+    </div>
+  </div>
+
+  <!-- ============ ADMINISTRATION MANAGER (NEW) ============ -->
+  <div class="card p-6 mb-6">
+    <h3 class="font-extrabold text-lg mb-5"><i class="fa-solid fa-users text-brand-500 mr-2"></i>Administration (${s.administration.length} members)</h3>
+
+    <div class="rounded-xl border border-brand-200 dark:border-slate-700 p-4 mb-5 bg-brand-50/50 dark:bg-slate-800/40">
+      <p class="text-sm font-bold mb-3"><i class="fa-solid fa-user-plus text-brand-500 mr-2"></i>Add New Member</p>
+      <div class="grid md:grid-cols-2 gap-3">
+        <div><label class="label">Full Name *</label><input id="adm_name" class="input" placeholder="e.g. Mr. Muhammad Aslam"/></div>
+        <div><label class="label">Role / Designation *</label><input id="adm_role" class="input" placeholder="e.g. Principal, Vice Principal, Administrator"/></div>
+        <div class="md:col-span-2">${imagePickerField('adm_pic', '', 'Photo')}</div>
+      </div>
+      <button onclick="addAdminMember()" class="btn btn-primary mt-3 text-sm"><i class="fa-solid fa-plus"></i> Add Member</button>
+    </div>
+
+    <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Existing Members — Click Edit to modify, Remove to delete</p>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      ${s.administration.map((a,i)=>`
+        <div class="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 group bg-white dark:bg-slate-800/60">
+          <div class="h-32 overflow-hidden">
+            <img src="${esc(a.pic)}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" alt="${esc(a.name)}"/>
+          </div>
+          <div class="p-3">
+            <p class="text-sm font-bold truncate">${esc(a.name)}</p>
+            <p class="text-xs text-brand-500 font-semibold">${esc(a.role)}</p>
+            <div class="flex gap-2 mt-3">
+              <button onclick="editAdminMember(${i})" class="flex-1 text-[11px] font-bold bg-brand-500 text-white rounded-lg py-1.5 hover:bg-brand-600 transition">
+                <i class="fa-solid fa-pen-to-square mr-1"></i> Edit
+              </button>
+              <button onclick="removeAdminMember(${i})" class="flex-1 text-[11px] font-bold bg-rose-100 text-rose-600 rounded-lg py-1.5 hover:bg-rose-200 transition">
+                <i class="fa-solid fa-trash mr-1"></i> Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('') || '<p class="text-sm text-slate-400 col-span-full text-center py-8">No administration members yet. Add one above.</p>'}
     </div>
   </div>
 
@@ -1795,15 +1939,13 @@ function adminWebsiteHTML(){
           </div>
         </div>`).join('')}
     </div>
-    <div class="grid md:grid-cols-3 gap-3">
+    <div class="grid md:grid-cols-2 gap-3">
       <input id="g_title" class="input" placeholder="Event title"/>
       <input id="g_desc" class="input" placeholder="Short description"/>
-      <input id="g_img" class="input" placeholder="Image URL"/>
     </div>
     <div class="flex flex-wrap gap-2 mt-3">
-      <button onclick="addGalleryItem()" class="btn btn-primary text-sm"><i class="fa-solid fa-plus"></i> Add via URL</button>
-      <label class="btn text-sm !bg-emerald-600 !text-white cursor-pointer">
-        <i class="fa-solid fa-upload"></i> Upload File
+      <label class="btn btn-primary text-sm cursor-pointer">
+        <i class="fa-solid fa-upload"></i> Upload Image
         <input type="file" accept="image/*" class="hidden" onchange="uploadGalleryImage(event)"/>
       </label>
     </div>
@@ -1813,6 +1955,77 @@ function adminWebsiteHTML(){
     <h3 class="font-extrabold text-lg mb-5"><i class="fa-solid fa-floppy-disk text-brand-500 mr-2"></i>Save Changes</h3>
     <button onclick="saveWebsite()" class="btn btn-primary"><i class="fa-solid fa-check"></i> Save Website Settings</button>
   </div>`;
+}
+
+/* ---- ADMINISTRATION MANAGEMENT (NEW) ---- */
+function addAdminMember(){
+  const name = (document.getElementById('adm_name')?.value || '').trim();
+  const role = (document.getElementById('adm_role')?.value || '').trim();
+  const pic = (document.getElementById('adm_pic')?.value || '').trim() || IMG.a1;
+  if (!name) return alertErr('Missing Name', 'Please enter the member\'s full name.');
+  if (!role) return alertErr('Missing Role', 'Please enter a role / designation.');
+  DB.settings.administration.push({ name, role, pic });
+  saveDB();
+  renderAdminPanel();
+  alertOk('Member Added', `${name} has been added to the administration.`);
+}
+
+function removeAdminMember(idx){
+  const m = DB.settings.administration[idx];
+  if (!m) return;
+  Swal.fire({
+    title: 'Remove this member?',
+    html: `<p class="text-sm">Remove <b>${esc(m.name)}</b> (${esc(m.role)}) from the administration section?</p>`,
+    icon: 'warning', showCancelButton: true,
+    confirmButtonColor: '#e11d48', confirmButtonText: 'Yes, Remove',
+    cancelButtonColor: '#64748b',
+    background: document.documentElement.classList.contains('dark') ? '#0f172a' : '#fff',
+    color: document.documentElement.classList.contains('dark') ? '#e2e8f0' : '#0f172a'
+  }).then(r => {
+    if (r.isConfirmed){
+      DB.settings.administration.splice(idx, 1);
+      saveDB();
+      renderAdminPanel();
+      toast('success', 'Member removed successfully');
+    }
+  });
+}
+
+function editAdminMember(idx){
+  const m = DB.settings.administration[idx];
+  if (!m) return;
+  openModal(`
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <h3 class="text-2xl font-extrabold"><i class="fa-solid fa-user-pen text-brand-500 mr-2"></i>Edit Member</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Update the administration member details.</p>
+      </div>
+      <button onclick="closeModal()" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-100 hover:text-rose-600 transition"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="space-y-4">
+      <div><label class="label">Full Name *</label><input id="edit_adm_name" class="input" value="${esc(m.name)}"/></div>
+      <div><label class="label">Role / Designation *</label><input id="edit_adm_role" class="input" value="${esc(m.role)}"/></div>
+      <div>${imagePickerField('edit_adm_pic', m.pic, 'Photo')}</div>
+      <button onclick="saveAdminMemberEdit(${idx})" class="btn btn-primary w-full mt-2"><i class="fa-solid fa-check"></i> Save Changes</button>
+    </div>
+  `);
+}
+
+function saveAdminMemberEdit(idx){
+  const m = DB.settings.administration[idx];
+  if (!m) return;
+  const name = (document.getElementById('edit_adm_name')?.value || '').trim();
+  const role = (document.getElementById('edit_adm_role')?.value || '').trim();
+  const pic = (document.getElementById('edit_adm_pic')?.value || '').trim();
+  if (!name) return alertErr('Missing Name', 'Name is required.');
+  if (!role) return alertErr('Missing Role', 'Role is required.');
+  m.name = name;
+  m.role = role;
+  if (pic) m.pic = pic;
+  saveDB();
+  closeModal();
+  renderAdminPanel();
+  toast('success', 'Member updated successfully');
 }
 
 /* ---- HERO IMAGE SELECTION ---- */
@@ -1876,7 +2089,6 @@ function saveWebsite(){
   const s = DB.settings;
   s.hero.title = g('w_heroTitle');
   s.hero.subtitle = g('w_heroSub');
-  // ⚠️ s.hero.image is NOT set here anymore — it's handled by selectHeroImage() / uploadHeroImage()
   s.about = g('w_about');
   s.vision = g('w_vision');
   s.mission = g('w_mission');
@@ -1895,12 +2107,10 @@ function saveWebsite(){
 }
 
 function addGalleryItem(){
-  const t = document.getElementById('g_title').value.trim();
-  const d = document.getElementById('g_desc').value.trim();
-  const i = document.getElementById('g_img').value.trim() || IMG.g1;
+  const t = document.getElementById('g_title')?.value.trim() || '';
+  const d = document.getElementById('g_desc')?.value.trim() || '';
   if (!t) return alertErr('Missing Title', 'Please enter an event title.');
-  DB.settings.gallery.push({ title:t, desc:d, img:i });
-  saveDB(); renderAdminPanel(); toast('success','Gallery item added');
+  alertErr('Use Upload', 'Please use the "Upload Image" button to add a gallery item.');
 }
 function removeGalleryItem(i){
   DB.settings.gallery.splice(i,1);
@@ -2059,8 +2269,18 @@ function adminTeachersHTML(){
       <input id="t_salary" type="number" class="input" placeholder="Salary"/>
       <input id="t_bank" class="input" placeholder="Bank Details"/>
       <input id="t_pass" class="input" placeholder="Login Password"/>
-      <input id="t_pic" class="input md:col-span-2" placeholder="Profile Picture URL"/>
-      <input id="t_resume" class="input" placeholder="Resume URL"/>
+      <div class="md:col-span-2">${imagePickerField('t_pic', '', 'Profile Picture')}</div>
+      <div>
+        <label class="label">Resume (PDF/Image)</label>
+        <div class="flex items-center gap-2">
+          <input type="hidden" id="t_resume" value=""/>
+          <span id="t_resume_label" class="text-xs text-slate-500 flex-1 truncate">No file selected</span>
+          <label class="btn text-xs bg-brand-500 text-white cursor-pointer">
+            <i class="fa-solid fa-upload"></i> Upload
+            <input type="file" accept="image/*,.pdf" class="hidden" onchange="handleFileUpload(event,'t_resume','t_resume_label')"/>
+          </label>
+        </div>
+      </div>
       <select id="t_class" class="input">${CLASS_LIST.map(c=>`<option>${c}</option>`).join('')}</select>
     </div>
     <button onclick="addTeacher()" class="btn btn-primary mt-3 text-sm"><i class="fa-solid fa-plus"></i> Add Teacher</button>
@@ -2168,7 +2388,7 @@ function adminStudentsHTML(){
       <select id="st_class" class="input">${CLASS_LIST.map(c=>`<option>${c}</option>`).join('')}</select>
       <input id="st_phone" class="input" placeholder="Phone"/>
       <input id="st_fees" type="number" class="input" placeholder="Monthly Fees"/>
-      <input id="st_photo" class="input" placeholder="Photo URL (optional)"/>
+      ${imagePickerField('st_photo', '', 'Photo (Optional)')}
     </div>
     <button onclick="addStudent()" class="btn btn-primary mt-3 text-sm"><i class="fa-solid fa-plus"></i> Add Student</button>
   </div>
@@ -2244,7 +2464,17 @@ function adminAcademicsHTML(){
       <input id="n_subject" class="input" placeholder="Subject"/>
       <input id="n_title" class="input" placeholder="Title"/>
       <select id="n_type" class="input"><option>Note</option><option>Test</option></select>
-      <input id="n_content" class="input md:col-span-4" placeholder="File / Image URL"/>
+      <div class="md:col-span-4">
+        <label class="label">File (Image / PDF)</label>
+        <div class="flex items-center gap-2">
+          <input type="hidden" id="n_content" value=""/>
+          <span id="n_content_label" class="text-sm text-slate-500 flex-1 truncate">No file selected</span>
+          <label class="btn btn-primary text-xs cursor-pointer">
+            <i class="fa-solid fa-upload"></i> Upload File
+            <input type="file" accept="image/*,.pdf" class="hidden" onchange="handleFileUpload(event,'n_content','n_content_label')"/>
+          </label>
+        </div>
+      </div>
     </div>
     <button onclick="addNote()" class="btn btn-primary mt-3 text-sm"><i class="fa-solid fa-upload"></i> Upload</button>
   </div>
@@ -2528,7 +2758,7 @@ function teacherClassHTML(t){
       <select id="tc_class" class="input">${myClasses.map(c=>`<option>${c}</option>`).join('')}</select>
       <input id="tc_phone" class="input" placeholder="Phone"/>
       <input id="tc_fees" type="number" class="input" placeholder="Monthly Fees"/>
-      <input id="tc_photo" class="input" placeholder="Photo URL"/>
+      ${imagePickerField('tc_photo', '', 'Photo')}
     </div>
     <button onclick="teacherAddStudent()" class="btn btn-primary mt-3 text-sm"><i class="fa-solid fa-plus"></i> Add Student</button>
   </div>
@@ -2597,7 +2827,17 @@ function teacherAcademicsHTML(t){
       <input id="tn_subject" class="input" placeholder="Subject" value="${esc(t.subject)}"/>
       <input id="tn_title" class="input" placeholder="Title"/>
       <select id="tn_type" class="input"><option>Note</option><option>Test</option></select>
-      <input id="tn_content" class="input md:col-span-4" placeholder="File / Image URL"/>
+      <div class="md:col-span-4">
+        <label class="label">File (Image / PDF)</label>
+        <div class="flex items-center gap-2">
+          <input type="hidden" id="tn_content" value=""/>
+          <span id="tn_content_label" class="text-sm text-slate-500 flex-1 truncate">No file selected</span>
+          <label class="btn btn-primary text-xs cursor-pointer">
+            <i class="fa-solid fa-upload"></i> Upload File
+            <input type="file" accept="image/*,.pdf" class="hidden" onchange="handleFileUpload(event,'tn_content','tn_content_label')"/>
+          </label>
+        </div>
+      </div>
     </div>
     <button onclick="teacherAddNote()" class="btn btn-primary mt-3 text-sm"><i class="fa-solid fa-upload"></i> Upload</button>
   </div>
@@ -2666,7 +2906,7 @@ function teacherActivitiesHTML(t){
     <div class="grid md:grid-cols-3 gap-3">
       <select id="ta_class" class="input">${myClasses.map(c=>`<option>${c}</option>`).join('')}</select>
       <input id="ta_title" class="input" placeholder="Activity title"/>
-      <input id="ta_img" class="input" placeholder="Image URL"/>
+      ${imagePickerField('ta_img', '', 'Activity Image')}
       <input id="ta_desc" class="input md:col-span-3" placeholder="Short description"/>
     </div>
     <button onclick="teacherAddActivity()" class="btn btn-primary mt-3 text-sm"><i class="fa-solid fa-plus"></i> Add Activity</button>
